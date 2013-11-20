@@ -1,0 +1,12 @@
+<idea-plugin>
+	<name>REST Client</name>
+
+	<extensions defaultExtensionNs="com.intellij">
+		<toolWindow id="REST Client" icon="/general/web.png" factoryClass="org.mustbe.consulo.restclient.ui.RestClientToolWindowFactory"
+					anchor="bottom"
+					canCloseContents="false"/>
+
+		<projectService serviceInterface="org.mustbe.consulo.restclient.ui.RestClientPanel"
+						serviceImplementation="org.mustbe.consulo.restclient.ui.RestClientPanel"/>
+	</extensions>
+</idea-plugin>
