@@ -32,17 +32,16 @@ import com.intellij.util.containers.MultiMap;
  *
  * @author rsubramanian
  */
-public final class XMLUtil {
-
-    private XMLUtil() {
+public final class XmlRequestUtil{
+    private XmlRequestUtil() {
     }
-    private static final Logger LOG = Logger.getLogger(XMLUtil.class.getName());
+    private static final Logger LOG = Logger.getLogger(XmlRequestUtil.class.getName());
     private static final String[] VERSIONS = new String[]{
         "3.0", "3.1", "3.2", "3.2.1", RCConstants.VERSION
     };
 
     public static final String XML_MIME = "application/xml";
-    
+
     static {
         // Sort the version array for binary search
         Arrays.sort(VERSIONS);
@@ -58,15 +57,15 @@ public final class XMLUtil {
             throw new XMLException("Version not supported");
         }
     }
-    
+
     private static Element getRootElement() {
         Element eRoot = new Element("rest-client");
         // set version attributes to rest-client root tag
         eRoot.setAttribute("version", RCConstants.VERSION);
         return eRoot;
     }
-    
-    protected static Element getRequestElement(final Request bean) {
+
+    public static Element getRequestElement(final Request bean) {
         Element reqElement = new Element("request");
 
         { // HTTP Version
@@ -183,29 +182,29 @@ public final class XMLUtil {
         }
         return m;
     }
-    
-    private static List<HttpCookie> getCookiesFromCookiesNode(final Element node) 
+
+    private static List<HttpCookie> getCookiesFromCookiesNode(final Element node)
             throws XMLException {
         List<HttpCookie> out = new ArrayList<HttpCookie>();
-        
+
         for (int i = 0; i < node.getChildren().size(); i++) {
             Element e = node.getChildren().get(i);
             if(!"cookie".equals(e.getQualifiedName())) {
                 throw new XMLException("<cookies> element should contain only <cookie> elements");
             }
-            
+
             HttpCookie cookie = new HttpCookie(e.getAttributeValue("name"),
                     e.getAttributeValue("value"));
             out.add(cookie);
         }
-        
+
         return out;
     }
-    
-    protected static Request getRequestBean(Element requestNode)
+
+    public static RequestBean getRequestBean(Element requestNode)
             throws MalformedURLException, XMLException {
         RequestBean requestBean = new RequestBean();
-        
+
         for (int i = 0; i < requestNode.getChildren().size(); i++) {
             Element tNode = requestNode.getChildren().get(i);
             String nodeName = tNode.getQualifiedName();
@@ -272,21 +271,21 @@ public final class XMLUtil {
         final String rcVersion = rootNode.getAttributeValue("version");
         checkIfVersionValid(rcVersion);
 
-        
 
-        // if more than two request element is present then throw the exception 
+
+        // if more than two request element is present then throw the exception
         if (rootNode.getChildren().size() != 1) {
             throw new XMLException("There can be only one child node for root node: <request>");
         }
-        // minimum one request element is present in xml 
+        // minimum one request element is present in xml
         if (rootNode.getChild("request") == null) {
             throw new XMLException("The child node of <rest-client> should be <request>");
         }
         Element requestNode = rootNode.getChild("request");
-        
+
         return getRequestBean(requestNode);
     }
-    
+
     protected static Element getResponseElement(final Response bean) {
         Element respElement = new Element("response");
         Element respChildSubElement = null;
@@ -307,7 +306,7 @@ public final class XMLUtil {
         MultiMap<String, String> headers = bean.getHeaders();
         if (!headers.isEmpty()) {
 
-            // creating sub child-child element 
+            // creating sub child-child element
             respChildSubElement = new Element("headers");
             for (String key : headers.keySet()) {
                 for(String value: headers.get(key)) {
@@ -330,7 +329,7 @@ public final class XMLUtil {
             respChildSubElement.addContent(base64encodedBody);
             respElement.addContent(respChildSubElement);
         }
-        // test result 
+        // test result
         TestResult testResult = bean.getTestResult();
         if (testResult != null) {
             //creating the test-result child element

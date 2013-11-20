@@ -117,8 +117,8 @@ public final class Util {
             throws IOException, XMLException {
         File requestFile = File.createTempFile("req-", ".xml");
         File responseFile = File.createTempFile("res-", ".xml");
-        XMLUtil.writeRequestXML(request, requestFile);
-        XMLUtil.writeResponseXML(response, responseFile);
+        XmlRequestUtil.writeRequestXML(request, requestFile);
+        XmlRequestUtil.writeResponseXML(response, responseFile);
 
         Map<String, File> files = new HashMap<String, File>();
         files.put("request.rcq", requestFile);
@@ -188,12 +188,12 @@ public final class Util {
                     dest.close();
 
                     if (entry.getName().equals("request.rcq")) {
-                        Request reqBean = XMLUtil.getRequestFromXMLFile(tmpFile);
+                        Request reqBean = XmlRequestUtil.getRequestFromXMLFile(tmpFile);
                         encpBean.setRequestBean(reqBean);
                         isReqRead = true;
                     }
                     else if(entry.getName().equals("response.rcs")){
-                        Response resBean = XMLUtil.getResponseFromXMLFile(tmpFile);
+                        Response resBean = XmlRequestUtil.getResponseFromXMLFile(tmpFile);
                         encpBean.setResponseBean(resBean);
                         isResRead = true;
                     }

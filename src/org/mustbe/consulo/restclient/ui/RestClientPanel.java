@@ -16,8 +16,10 @@ import javax.swing.JTabbedPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 
+import org.consulo.lombok.annotations.ProjectService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.mustbe.consulo.restclient.RestClientHistoryManager;
 import org.wiztools.restclient.HTTPClientRequestExecuter;
 import org.wiztools.restclient.ViewAdapter;
 import org.wiztools.restclient.bean.ContentType;
@@ -27,13 +29,12 @@ import org.wiztools.restclient.bean.RequestBean;
 import org.wiztools.restclient.bean.RequestExecuter;
 import org.wiztools.restclient.bean.Response;
 import com.intellij.codeInsight.hint.HintUtil;
-import com.intellij.icons.AllIcons;
 import com.intellij.lang.Language;
+import com.intellij.openapi.actionSystem.ActionGroup;
+import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionToolbar;
-import com.intellij.openapi.actionSystem.EmptyAction;
-import com.intellij.openapi.actionSystem.Presentation;
-import com.intellij.openapi.actionSystem.impl.ActionButton;
+import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.EditorFactory;
@@ -48,7 +49,6 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
@@ -67,6 +67,7 @@ import lombok.val;
  * @author VISTALL
  * @since 20.11.13.
  */
+@ProjectService
 public class RestClientPanel extends Ref<Project>
 {
 	private JComboBox myMethodComboBox;
@@ -74,7 +75,7 @@ public class RestClientPanel extends Ref<Project>
 	private JTabbedPane myTabPanel;
 	private JPanel myResponseTab;
 	private JBSplitter myResponseSplitter;
-	private JPanel myActionPanel;
+
 	private TextFieldWithAutoCompletionWithEnter myUrlTextField;
 	private JLabel myResultLabel;
 	private JComboBox myHttpVersionBox;
@@ -167,22 +168,14 @@ public class RestClientPanel extends Ref<Project>
 					@Override
 					public void run(@NotNull ProgressIndicator progressIndicator)
 					{
-						URL url = null;
-						try
-						{
-							url = new URL(myUrlTextField.getText());
-						}
-						catch(MalformedURLException e)
+						val request = getRequestBean();
+						if(request == null)
 						{
 							return;
 						}
 
 						RequestExecuter requestExecuter = new HTTPClientRequestExecuter();
 
-						RequestBean request = new RequestBean();
-						request.setUrl(url);
-						request.setMethod((HTTPMethod) myMethodComboBox.getSelectedItem());
-						request.setHttpVersion((HTTPVersion) myHttpVersionBox.getSelectedItem());
 						requestExecuter.execute(request, new ViewAdapter()
 						{
 							@Override
@@ -238,6 +231,8 @@ public class RestClientPanel extends Ref<Project>
 										editorTextField.setNewDocumentAndFileType(fileType, EditorFactory.getInstance().createDocument(new String
 												(response.getResponseBody(), contentType.getCharset())));
 
+										RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
+
 										SwingUtilities.invokeLater(new Runnable()
 										{
 											@Override
@@ -255,15 +250,39 @@ public class RestClientPanel extends Ref<Project>
 			}
 		});
 
-		JPanel panel = new JPanel(new VerticalFlowLayout());
-		myActionPanel.add(panel, BorderLayout.CENTER);
+		AnAction restClientToolbarActions = ActionManager.getInstance().getAction("RESTClientToolbarActions");
 
-		Presentation presentation = new Presentation();
-		presentation.setIcon(AllIcons.General.MessageHistory);
+		ActionToolbar actionToolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.UNKNOWN, (ActionGroup) restClientToolbarActions,
+				false);
 
-		val button = new ActionButton(new EmptyAction(), presentation, ActionPlaces.UNKNOWN, ActionToolbar.DEFAULT_MINIMUM_BUTTON_SIZE);
+		myRootPanel.add(actionToolbar.getComponent(), BorderLayout.WEST);
+	}
 
-		myActionPanel.add(button);
+	@Nullable
+	public RequestBean getRequestBean()
+	{
+		URL url = null;
+		try
+		{
+			url = new URL(myUrlTextField.getText());
+		}
+		catch(MalformedURLException e)
+		{
+			return null;
+		}
+		RequestBean request = new RequestBean();
+		request.setUrl(url);
+		request.setMethod((HTTPMethod) myMethodComboBox.getSelectedItem());
+		request.setHttpVersion((HTTPVersion) myHttpVersionBox.getSelectedItem());
+		return request;
+	}
+
+	public void setRequestBean(RequestBean requestBean)
+	{
+		myHttpVersionBox.setSelectedItem(requestBean.getHttpVersion());
+		myMethodComboBox.setSelectedItem(requestBean.getMethod());
+		URL url = requestBean.getUrl();
+		myUrlTextField.setText(url == null ? "" : url.toString());
 	}
 
 	public JPanel getRootPanel()

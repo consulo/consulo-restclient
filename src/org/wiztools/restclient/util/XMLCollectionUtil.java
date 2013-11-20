@@ -24,28 +24,28 @@ public final class XMLCollectionUtil {
         Element eRoot = new Element("request-collection");
         eRoot.setAttribute("version", RCConstants.VERSION);
         for(Request req: requests) {
-            Element e = XMLUtil.getRequestElement(req);
+            Element e = XmlRequestUtil.getRequestElement(req);
             eRoot.addContent(e);
         }
         Document doc = new Document(eRoot);
-        XMLUtil.writeXML(doc, f);
+        XmlRequestUtil.writeXML(doc, f);
     }
     
     public static List<Request> getRequestCollectionFromXMLFile(final File f)
             throws IOException, XMLException {
         List<Request> out = new ArrayList<Request>();
-        Document doc = XMLUtil.getDocumentFromFile(f);
+        Document doc = XmlRequestUtil.getDocumentFromFile(f);
         Element eRoot = doc.getRootElement();
         if(!"request-collection".equals(eRoot.getName())) {
             throw new XMLException("Expecting root element <request-collection>, but found: "
                     + eRoot.getName());
         }
         final String version = eRoot.getAttributeValue("version");
-        XMLUtil.checkIfVersionValid(version);
+        XmlRequestUtil.checkIfVersionValid(version);
         List<Element> eRequests = doc.getRootElement().getChildren();
         for(int i=0; i<eRequests.size(); i++) {
             Element eRequest = eRequests.get(i);
-            Request req = XMLUtil.getRequestBean(eRequest);
+            Request req = XmlRequestUtil.getRequestBean(eRequest);
             out.add(req);
         }
         return out;

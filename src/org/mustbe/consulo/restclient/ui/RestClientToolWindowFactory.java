@@ -16,6 +16,8 @@ public class RestClientToolWindowFactory implements ToolWindowFactory
 	{
 		ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
 
-		toolWindow.getContentManager().addContent(contentFactory.createContent(new RestClientPanel(project).getRootPanel(), "", true));
+		RestClientPanel restClientPanel = RestClientPanel.getInstance(project);
+
+		toolWindow.getContentManager().addContent(contentFactory.createContent(restClientPanel.getRootPanel(), "", true));
 	}
 }
