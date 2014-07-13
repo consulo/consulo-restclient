@@ -1,5 +1,7 @@
 <idea-plugin>
 	<name>REST Client</name>
+	<version>SNAPSHOT</version>
+	<vendor>Must-Be.org</vendor>
 
 	<actions>
 		<group id="RESTClientToolbarActions">
@@ -40,5 +42,7 @@
 
 		<projectService serviceInterface="org.mustbe.consulo.restclient.ui.RestClientPanel"
 						serviceImplementation="org.mustbe.consulo.restclient.ui.RestClientPanel"/>
+
+		<errorHandler implementation="com.intellij.diagnostic.ITNReporter" />
 	</extensions>
 </idea-plugin>

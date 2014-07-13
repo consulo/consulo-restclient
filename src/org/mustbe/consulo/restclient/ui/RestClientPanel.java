@@ -4,8 +4,8 @@ import java.awt.BorderLayout;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +28,7 @@ import org.wiztools.restclient.bean.HTTPVersion;
 import org.wiztools.restclient.bean.RequestBean;
 import org.wiztools.restclient.bean.RequestExecuter;
 import org.wiztools.restclient.bean.Response;
+import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.hint.HintUtil;
 import com.intellij.lang.Language;
 import com.intellij.openapi.actionSystem.ActionGroup;
@@ -37,10 +38,12 @@ import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.ex.EditorEx;
+import com.intellij.openapi.editor.impl.EditorFactoryImpl;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.fileTypes.LanguageFileType;
@@ -81,6 +84,8 @@ public class RestClientPanel extends Ref<Project>
 	private JComboBox myHttpVersionBox;
 
 	private List<Pair<String, String>> myHeaders = new ArrayList<Pair<String, String>>();
+
+	private EditorTextField myEditorTextField;
 
 	public RestClientPanel(final Project project)
 	{
@@ -126,8 +131,7 @@ public class RestClientPanel extends Ref<Project>
 
 		myResponseSplitter.setFirstComponent(new JBScrollPane(table));
 
-		final EditorTextField editorTextField = new EditorTextField(EditorFactory.getInstance().createDocument(""), project,
-				PlainTextFileType.INSTANCE, true, false)
+		myEditorTextField = new EditorTextField(EditorFactory.getInstance().createDocument(""), project, PlainTextFileType.INSTANCE, true, false)
 		{
 			@Override
 			protected EditorEx createEditor()
@@ -137,9 +141,9 @@ public class RestClientPanel extends Ref<Project>
 				return editor;
 			}
 		};
-		editorTextField.setFontInheritedFromLAF(false);
+		myEditorTextField.setFontInheritedFromLAF(false);
 
-		myResponseSplitter.setSecondComponent(editorTextField);
+		myResponseSplitter.setSecondComponent(new JBScrollPane(myEditorTextField));
 
 		myUrlTextField.addDocumentListener(new DocumentAdapter()
 		{
@@ -228,8 +232,11 @@ public class RestClientPanel extends Ref<Project>
 											fileType = PlainTextFileType.INSTANCE;
 										}
 
-										editorTextField.setNewDocumentAndFileType(fileType, EditorFactory.getInstance().createDocument(new String
-												(response.getResponseBody(), contentType.getCharset())));
+										EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
+										Document document = editorFactory.createDocument(new String(response.getResponseBody(),
+												contentType.getCharset()), true, true);
+
+										myEditorTextField.setNewDocumentAndFileType(fileType, document);
 
 										RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
 
@@ -292,8 +299,25 @@ public class RestClientPanel extends Ref<Project>
 
 	private void createUIComponents()
 	{
-		myUrlTextField = new TextFieldWithAutoCompletionWithEnter(get(), new TextFieldWithAutoCompletion.StringsCompletionProvider(Arrays.asList
-				("test"), null), false, null);
+		myUrlTextField = new TextFieldWithAutoCompletionWithEnter(get(), new TextFieldWithAutoCompletion.StringsCompletionProvider(null, null)
+		{
+			@NotNull
+			@Override
+			public Collection<String> getItems(String prefix, boolean cached, CompletionParameters parameters)
+			{
+				if(prefix == null)
+				{
+					return Collections.emptyList();
+				}
+
+				List<String> list = new ArrayList<String>();
+				for(RequestBean o : RestClientHistoryManager.getInstance(get()).getRequests().values())
+				{
+					list.add(o.getUrl().toString());
+				}
+				return list;
+			}
+		}, false, null);
 		myUrlTextField.setPlaceholder("URL");
 
 	}
