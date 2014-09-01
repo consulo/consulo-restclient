@@ -3,6 +3,7 @@ package org.mustbe.consulo.restclient.ui;
 import java.awt.BorderLayout;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -214,15 +215,21 @@ public class RestClientPanel extends Ref<Project>
 										table.revalidate();
 										FileType fileType = null;
 
+										Charset charset = Charset.defaultCharset();
 										ContentType contentType = response.getContentType();
-										Collection<Language> languages = Language.findInstancesByMimeType(contentType.getContentType());
-										if(!languages.isEmpty())
+										if(contentType != null)
 										{
-											for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
+											charset = contentType.getCharset();
+											Collection<Language> languages = Language.findInstancesByMimeType(contentType.getContentType());
+											if(!languages.isEmpty())
 											{
-												if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
+												for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
 												{
-													fileType = type;
+													if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
+
+													{
+														fileType = type;
+													}
 												}
 											}
 										}
@@ -234,7 +241,7 @@ public class RestClientPanel extends Ref<Project>
 
 										EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
 										Document document = editorFactory.createDocument(new String(response.getResponseBody(),
-												contentType.getCharset()), true, true);
+												charset), true, true);
 
 										myEditorTextField.setNewDocumentAndFileType(fileType, document);
 
