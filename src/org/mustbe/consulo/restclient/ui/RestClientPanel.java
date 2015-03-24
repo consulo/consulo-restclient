@@ -28,6 +28,7 @@ import java.util.Map;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.ScrollPaneConstants;
@@ -72,8 +73,10 @@ import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.ui.ColoredListCellRendererWrapper;
 import com.intellij.ui.EditorTextField;
 import com.intellij.ui.JBSplitter;
+import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.TextFieldWithAutoCompletion;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
@@ -108,11 +111,35 @@ public class RestClientPanel extends Ref<Project>
 	{
 		super(project);
 
+		myMethodComboBox.setRenderer(new ColoredListCellRendererWrapper<HTTPMethod>()
+		{
+			@Override
+			protected void doCustomize(JList list, HTTPMethod value, int index, boolean selected, boolean hasFocus)
+			{
+				if(index == -1)
+				{
+					append("Method: ", SimpleTextAttributes.GRAY_ATTRIBUTES);
+				}
+				append(value.name());
+			}
+		});
+
 		for(HTTPMethod httpMethod : HTTPMethod.values())
 		{
 			myMethodComboBox.addItem(httpMethod);
 		}
 
+		myHttpVersionBox.setRenderer(new ColoredListCellRendererWrapper<HTTPVersion>() {
+			@Override
+			protected void doCustomize(JList list, HTTPVersion value, int index, boolean selected, boolean hasFocus)
+			{
+				if(index == -1)
+				{
+					append("Protocol: ", SimpleTextAttributes.GRAY_ATTRIBUTES);
+				}
+				append(value.name());
+			}
+		});
 		for(HTTPVersion httpVersion : HTTPVersion.values())
 		{
 			myHttpVersionBox.addItem(httpVersion);
@@ -241,7 +268,8 @@ public class RestClientPanel extends Ref<Project>
 											{
 												for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
 												{
-													if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
+													if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage
+															()))
 
 													{
 														fileType = type;
@@ -256,8 +284,8 @@ public class RestClientPanel extends Ref<Project>
 										}
 
 										EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
-										Document document = editorFactory.createDocument(new String(response.getResponseBody(),
-												charset), true, true);
+										Document document = editorFactory.createDocument(new String(response.getResponseBody(), charset), true,
+												true);
 
 										myEditorTextField.setNewDocumentAndFileType(fileType, document);
 
