@@ -17,14 +17,14 @@
 package org.mustbe.consulo.restclient.ui;
 
 import java.awt.BorderLayout;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -38,22 +38,17 @@ import org.consulo.lombok.annotations.ProjectService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mustbe.consulo.restclient.RestClientHistoryManager;
-import org.wiztools.restclient.HTTPClientRequestExecuter;
-import org.wiztools.restclient.ViewAdapter;
-import org.wiztools.restclient.bean.ContentType;
-import org.wiztools.restclient.bean.HTTPMethod;
-import org.wiztools.restclient.bean.HTTPVersion;
 import org.wiztools.restclient.bean.RequestBean;
-import org.wiztools.restclient.bean.RequestExecuter;
-import org.wiztools.restclient.bean.Response;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.hint.HintUtil;
 import com.intellij.lang.Language;
+import com.intellij.openapi.Disposable;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.editor.Document;
@@ -80,10 +75,18 @@ import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.TextFieldWithAutoCompletion;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.ui.table.JBTable;
-import com.intellij.util.containers.MultiMap;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import com.intellij.util.ui.UIUtil;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Protocol;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import com.squareup.okhttp.ResponseBody;
 import lombok.val;
 
 /**
@@ -91,8 +94,17 @@ import lombok.val;
  * @since 20.11.13.
  */
 @ProjectService
-public class RestClientPanel extends Ref<Project>
+public class RestClientPanel extends Ref<Project>  implements Disposable
 {
+	private static final String[] ourSupportedMethods = new String[] {
+			"GET",
+			"DELETE",
+			"HEAD",
+			//TODO [VISTALL] support request body
+			//"POST",
+			//"PUT",
+			//"PATCH"
+	};
 	private JComboBox myMethodComboBox;
 	private JPanel myRootPanel;
 	private JTabbedPane myTabPanel;
@@ -111,37 +123,41 @@ public class RestClientPanel extends Ref<Project>
 	{
 		super(project);
 
-		myMethodComboBox.setRenderer(new ColoredListCellRendererWrapper<HTTPMethod>()
+		myMethodComboBox.setRenderer(new ColoredListCellRendererWrapper<String>()
 		{
 			@Override
-			protected void doCustomize(JList list, HTTPMethod value, int index, boolean selected, boolean hasFocus)
+			protected void doCustomize(JList list, String value, int index, boolean selected, boolean hasFocus)
 			{
 				if(index == -1)
 				{
 					append("Method: ", SimpleTextAttributes.GRAY_ATTRIBUTES);
 				}
-				append(value.name());
+				append(value);
 			}
 		});
 
-		for(HTTPMethod httpMethod : HTTPMethod.values())
+		for(String httpMethod : ourSupportedMethods)
 		{
 			myMethodComboBox.addItem(httpMethod);
 		}
 
-		myHttpVersionBox.setRenderer(new ColoredListCellRendererWrapper<HTTPVersion>() {
+		myHttpVersionBox.setRenderer(new ColoredListCellRendererWrapper<Protocol>() {
 			@Override
-			protected void doCustomize(JList list, HTTPVersion value, int index, boolean selected, boolean hasFocus)
+			protected void doCustomize(JList list, Protocol value, int index, boolean selected, boolean hasFocus)
 			{
 				if(index == -1)
 				{
 					append("Protocol: ", SimpleTextAttributes.GRAY_ATTRIBUTES);
 				}
-				append(value.name());
+				append(value.toString());
 			}
 		});
-		for(HTTPVersion httpVersion : HTTPVersion.values())
+		for(Protocol httpVersion : Protocol.values())
 		{
+			if(httpVersion == Protocol.HTTP_1_0)
+			{
+				continue;
+			}
 			myHttpVersionBox.addItem(httpVersion);
 		}
 
@@ -221,84 +237,92 @@ public class RestClientPanel extends Ref<Project>
 						{
 							return;
 						}
+						Request.Builder builder = new Request.Builder();
+						builder = builder.method((String) myMethodComboBox.getSelectedItem(), null);
+						builder = builder.url(request.getUrl());
+						builder = builder.header("User-Agent", ApplicationInfo.getInstance().getVersionName());
+						Request build = builder.build();
 
-						RequestExecuter requestExecuter = new HTTPClientRequestExecuter();
-
-						requestExecuter.execute(request, new ViewAdapter()
+						OkHttpClient client = new OkHttpClient();
+						client.setProtocols(Arrays.<Protocol>asList(request.getHttpVersion()));
+						Call call = client.newCall(build);
+						call.enqueue(new Callback()
 						{
 							@Override
-							public void doError(final String error)
+							public void onFailure(Request request, final IOException e)
 							{
 								SwingUtilities.invokeLater(new Runnable()
 								{
 									@Override
 									public void run()
 									{
-										Messages.showErrorDialog(error, "Error While Processing Request");
+										Messages.showErrorDialog(e.getMessage(), "Error While Processing Request");
 									}
 								});
 							}
 
 							@Override
-							public void doResponse(final Response response)
+							public void onResponse(final Response response) throws IOException
 							{
 								new WriteAction<Object>()
 								{
 									@Override
 									protected void run(Result<Object> objectResult) throws Throwable
 									{
-										myResultLabel.setText(response.getStatusLine());
+										myResultLabel.setText(String.valueOf(response.code()));
 										myHeaders.clear();
 
-										MultiMap<String, String> headers = response.getHeaders();
-										for(Map.Entry<String, Collection<String>> entry : headers.entrySet())
+										Headers headers = response.headers();
+										for(String headerName : headers.names())
 										{
-											myHeaders.add(new Pair<String, String>(entry.getKey(), StringUtil.join(entry.getValue(), ";")));
+											myHeaders.add(new Pair<String, String>(headerName, StringUtil.join(headers.values(headerName), ";")));
 										}
+
 										table.revalidate();
 										FileType fileType = null;
 
-										Charset charset = Charset.defaultCharset();
-										ContentType contentType = response.getContentType();
-										if(contentType != null)
+										ResponseBody body = response.body();
+										if(body != null)
 										{
-											charset = contentType.getCharset();
-											Collection<Language> languages = Language.findInstancesByMimeType(contentType.getContentType());
-											if(!languages.isEmpty())
+											MediaType contentType = body.contentType();
+											if(contentType != null)
 											{
-												for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
+												String mime = contentType.type() + "/" + contentType.subtype();
+												Collection<Language> languages = Language.findInstancesByMimeType(mime);
+												if(!languages.isEmpty())
 												{
-													if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage
-															()))
-
+													for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
 													{
-														fileType = type;
+														if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
+														{
+															fileType = type;
+														}
 													}
 												}
 											}
-										}
 
-										if(fileType == null)
-										{
-											fileType = PlainTextFileType.INSTANCE;
-										}
-
-										EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
-										Document document = editorFactory.createDocument(new String(response.getResponseBody(), charset), true,
-												true);
-
-										myEditorTextField.setNewDocumentAndFileType(fileType, document);
-
-										RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
-
-										SwingUtilities.invokeLater(new Runnable()
-										{
-											@Override
-											public void run()
+											if(fileType == null)
 											{
-												myTabPanel.setSelectedComponent(myResponseTab);
+												fileType = PlainTextFileType.INSTANCE;
 											}
-										});
+
+											EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
+											Document document = editorFactory.createDocument(body.string(), true,
+													true);
+
+											myEditorTextField.setNewDocumentAndFileType(fileType, document);
+
+											RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
+
+											SwingUtilities.invokeLater(new Runnable()
+											{
+												@Override
+												public void run()
+												{
+													myTabPanel.setSelectedComponent(myResponseTab);
+												}
+											});
+										}
 									}
 								}.execute();
 							}
@@ -330,8 +354,8 @@ public class RestClientPanel extends Ref<Project>
 		}
 		RequestBean request = new RequestBean();
 		request.setUrl(url);
-		request.setMethod((HTTPMethod) myMethodComboBox.getSelectedItem());
-		request.setHttpVersion((HTTPVersion) myHttpVersionBox.getSelectedItem());
+		request.setMethod((String) myMethodComboBox.getSelectedItem());
+		request.setHttpVersion((Protocol) myHttpVersionBox.getSelectedItem());
 		return request;
 	}
 
@@ -371,5 +395,11 @@ public class RestClientPanel extends Ref<Project>
 		}, false, null);
 		myUrlTextField.setPlaceholder("URL");
 
+	}
+
+	@Override
+	public void dispose()
+	{
+		myEditorTextField.setDocument(null);
 	}
 }

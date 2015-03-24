@@ -7,22 +7,23 @@ import java.util.Collections;
 import java.util.List;
 
 import com.intellij.util.containers.MultiMap;
+import com.squareup.okhttp.Protocol;
 
 /**
  *
  * @author subwiz
  */
-public final class RequestBean implements Request {
+public final class RequestBean {
     
     private URL url;
-    private HTTPMethod method;
+    private String method = "GET";
     private Auth auth;
     private final MultiMap<String, String> headers = new MultiMap<String, String>();
     private final List<HttpCookie> cookies = new ArrayList<HttpCookie>();
     private ReqEntity body;
     private String testScript;
     private SSLReq sslReq;
-    private HTTPVersion httpVersion = HTTPVersion.getDefault(); // Initialize to the default version
+    private Protocol httpVersion = Protocol.HTTP_1_1;
     private boolean isFollowRedirect;
     private boolean isIgnoreResponseBody = false;
     
@@ -30,12 +31,12 @@ public final class RequestBean implements Request {
         this.auth = auth;
     }
     
-    @Override
+    
     public Auth getAuth() {
         return auth;
     }
 
-    @Override
+    
     public SSLReq getSslReq() {
         return sslReq;
     }
@@ -44,16 +45,16 @@ public final class RequestBean implements Request {
         this.sslReq = sslReq;
     }
 
-    @Override
-    public HTTPVersion getHttpVersion() {
+    
+    public Protocol getHttpVersion() {
         return httpVersion;
     }
 
-    public void setHttpVersion(HTTPVersion httpVersion) {
+    public void setHttpVersion(Protocol httpVersion) {
         this.httpVersion = httpVersion;
     }
     
-    @Override
+    
     public String getTestScript() {
         return testScript;
     }
@@ -62,7 +63,7 @@ public final class RequestBean implements Request {
         this.testScript = testScript;
     }
 
-    @Override
+    
     public ReqEntity getBody() {
         return body;
     }
@@ -71,7 +72,7 @@ public final class RequestBean implements Request {
         this.body = body;
     }
 
-    @Override
+    
     public MultiMap<String, String> getHeaders() {
         return new MultiMap<String, String>(headers);
     }
@@ -84,21 +85,21 @@ public final class RequestBean implements Request {
         this.cookies.add(cookie);
     }
     
-    @Override
+    
     public List<HttpCookie> getCookies() {
         return Collections.unmodifiableList(this.cookies);
     }
 
-    @Override
-    public HTTPMethod getMethod() {
+    
+    public String getMethod() {
         return method;
     }
 
-    public void setMethod(final HTTPMethod method) {
+    public void setMethod(final String method) {
         this.method = method;
     }
 
-    @Override
+    
     public URL getUrl() {
         return url;
     }
@@ -107,7 +108,7 @@ public final class RequestBean implements Request {
         this.url = url;
     }
 
-    @Override
+    
     public boolean isFollowRedirect() {
         return isFollowRedirect;
     }
@@ -120,12 +121,12 @@ public final class RequestBean implements Request {
         this.isIgnoreResponseBody = isIgnoreResponseBody;
     }
     
-    @Override
+    
     public boolean isIgnoreResponseBody() {
         return isIgnoreResponseBody;
     }
     
-    @Override
+    
     public Object clone(){
         RequestBean cloned = new RequestBean();
         cloned.setSslReq(sslReq);
@@ -153,7 +154,7 @@ public final class RequestBean implements Request {
         return cloned;
     }
 
-    @Override
+    
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -198,7 +199,7 @@ public final class RequestBean implements Request {
         return true;
     }
 
-    @Override
+    
     public int hashCode() {
         int hash = 7;
         hash = 23 * hash + (this.url != null ? this.url.hashCode() : 0);
@@ -215,7 +216,7 @@ public final class RequestBean implements Request {
         return hash;
     }
 
-    @Override
+    
     public String toString(){
         StringBuilder sb = new StringBuilder();
         sb.append("@Request[");

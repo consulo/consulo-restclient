@@ -19,7 +19,6 @@ package org.mustbe.consulo.restclient.actions;
 import javax.swing.SwingUtilities;
 
 import org.mustbe.consulo.restclient.ui.RestClientPanel;
-import org.wiztools.restclient.bean.HTTPMethod;
 import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -39,7 +38,6 @@ public class CleanAction extends AnAction
 			public void run()
 			{
 				RequestBean requestBean = new RequestBean();
-				requestBean.setMethod(HTTPMethod.GET);
 
 				RestClientPanel.getInstance(e.getProject()).setRequestBean(requestBean);
 			}

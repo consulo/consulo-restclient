@@ -21,7 +21,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.wiztools.restclient.Base64Exception;
 import org.wiztools.restclient.XMLException;
 import org.wiztools.restclient.bean.ReqResBean;
-import org.wiztools.restclient.bean.Request;
+import org.wiztools.restclient.bean.RequestBean;
 import org.wiztools.restclient.bean.Response;
 import com.google.common.base.Charsets;
 import com.intellij.util.containers.MultiMap;
@@ -113,7 +113,7 @@ public final class Util {
         return sb.toString();
     }
 
-    public static void createReqResArchive(Request request, Response response, File zipFile)
+    public static void createReqResArchive(RequestBean request, Response response, File zipFile)
             throws IOException, XMLException {
         File requestFile = File.createTempFile("req-", ".xml");
         File responseFile = File.createTempFile("res-", ".xml");
@@ -188,7 +188,7 @@ public final class Util {
                     dest.close();
 
                     if (entry.getName().equals("request.rcq")) {
-                        Request reqBean = XmlRequestUtil.getRequestFromXMLFile(tmpFile);
+                        RequestBean reqBean = XmlRequestUtil.getRequestFromXMLFile(tmpFile);
                         encpBean.setRequestBean(reqBean);
                         isReqRead = true;
                     }

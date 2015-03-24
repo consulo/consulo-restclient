@@ -4,7 +4,7 @@
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="USE_ALT_CONSULO_SDK" value="false" />
     <option name="ALT_CONSULO_SDK_PATH" />
-    <java-sdk name="1.6" />
+    <java-sdk name="1.7 (predefined)" />
     <consulo-sdk name="Consulo 1.SNAPSHOT" />
     <artifact name="plugin" />
     <predefined_log_file id="IDEA_LOG" enabled="true" />

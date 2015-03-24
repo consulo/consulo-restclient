@@ -7,7 +7,6 @@ import java.net.HttpCookie;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +21,18 @@ import javax.xml.stream.events.XMLEvent;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
-import org.wiztools.restclient.RCConstants;
 import org.wiztools.restclient.XMLException;
-import org.wiztools.restclient.bean.*;
+import org.wiztools.restclient.bean.Auth;
+import org.wiztools.restclient.bean.ReqEntity;
+import org.wiztools.restclient.bean.RequestBean;
+import org.wiztools.restclient.bean.Response;
+import org.wiztools.restclient.bean.ResponseBean;
+import org.wiztools.restclient.bean.TestExceptionResult;
+import org.wiztools.restclient.bean.TestResult;
+import org.wiztools.restclient.bean.TestResultBean;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.containers.MultiMap;
+import com.squareup.okhttp.Protocol;
 
 /**
  *
@@ -36,41 +42,19 @@ public final class XmlRequestUtil{
     private XmlRequestUtil() {
     }
     private static final Logger LOG = Logger.getLogger(XmlRequestUtil.class.getName());
-    private static final String[] VERSIONS = new String[]{
-        "3.0", "3.1", "3.2", "3.2.1", RCConstants.VERSION
-    };
 
     public static final String XML_MIME = "application/xml";
 
-    static {
-        // Sort the version array for binary search
-        Arrays.sort(VERSIONS);
-    }
-
-    protected static void checkIfVersionValid(final String restVersion)
-            throws XMLException {
-        if (restVersion == null) {
-            throw new XMLException("Attribute `version' not available for root element");
-        }
-        int res = Arrays.binarySearch(VERSIONS, restVersion);
-        if (res == -1) {
-            throw new XMLException("Version not supported");
-        }
-    }
-
     private static Element getRootElement() {
-        Element eRoot = new Element("rest-client");
-        // set version attributes to rest-client root tag
-        eRoot.setAttribute("version", RCConstants.VERSION);
-        return eRoot;
+        return new Element("rest-client");
     }
 
-    public static Element getRequestElement(final Request bean) {
+    public static Element getRequestElement(final RequestBean bean) {
         Element reqElement = new Element("request");
 
         { // HTTP Version
             Element e = new Element("http-version");
-            e.addContent(bean.getHttpVersion().versionNumber());
+            e.addContent(bean.getHttpVersion().toString());
             reqElement.addContent(e);
         }
 
@@ -92,7 +76,7 @@ public final class XmlRequestUtil{
 
         { // creating the method child element
             Element e = new Element("method");
-            e.addContent(bean.getMethod().name());
+            e.addContent(bean.getMethod());
             reqElement.addContent(e);
         }
 
@@ -157,7 +141,7 @@ public final class XmlRequestUtil{
         return reqElement;
     }
 
-    protected static Document request2XML(final Request bean)
+    protected static Document request2XML(final RequestBean bean)
             throws XMLException {
         Element reqRootElement = getRootElement();
         reqRootElement.addContent(getRequestElement(bean));
@@ -209,9 +193,14 @@ public final class XmlRequestUtil{
             Element tNode = requestNode.getChildren().get(i);
             String nodeName = tNode.getQualifiedName();
             if ("http-version".equals(nodeName)) {
-                String t = tNode.getValue();
-                HTTPVersion httpVersion = "1.1".equals(t) ? HTTPVersion.HTTP_1_1 : HTTPVersion.HTTP_1_0;
-                requestBean.setHttpVersion(httpVersion);
+                try
+                {
+                    requestBean.setHttpVersion(Protocol.get(tNode.getValue()));
+                }
+                catch(IOException e)
+                {
+					requestBean.setHttpVersion(Protocol.HTTP_1_1);
+                }
             }
             else if("http-follow-redirects".equals(nodeName)) {
                 requestBean.setFollowRedirect(true);
@@ -224,7 +213,7 @@ public final class XmlRequestUtil{
                 requestBean.setUrl(url);
             }
             else if ("method".equals(nodeName)) {
-                requestBean.setMethod(HTTPMethod.get(tNode.getValue()));
+                requestBean.setMethod(tNode.getValue());
             }
             else if("auth".equals(nodeName)) {
                 requestBean.setAuth(XmlAuthUtil.getAuth(tNode));
@@ -258,7 +247,7 @@ public final class XmlRequestUtil{
         return requestBean;
     }
 
-    protected static Request xml2Request(final Document doc)
+    protected static RequestBean xml2Request(final Document doc)
             throws MalformedURLException, XMLException {
         // get the rootNode
         Element rootNode = doc.getRootElement();
@@ -266,12 +255,6 @@ public final class XmlRequestUtil{
         if (!"rest-client".equals(rootNode.getQualifiedName())) {
             throw new XMLException("Root node is not <rest-client>");
         }
-
-        // checking correct rest version
-        final String rcVersion = rootNode.getAttributeValue("version");
-        checkIfVersionValid(rcVersion);
-
-
 
         // if more than two request element is present then throw the exception
         if (rootNode.getChildren().size() != 1) {
@@ -409,8 +392,6 @@ public final class XmlRequestUtil{
             throw new XMLException("Root node is not <rest-client>");
         }
 
-        // checking correct rest version
-        checkIfVersionValid(rootNode.getAttributeValue("version"));
 
         // assign rootnode to current node and also finding 'response' node
         Element tNode = null;
@@ -517,7 +498,7 @@ public final class XmlRequestUtil{
         }
     }
 
-    public static void writeRequestXML(final Request bean, final File f)
+    public static void writeRequestXML(final RequestBean bean, final File f)
             throws IOException, XMLException {
         Document doc = request2XML(bean);
         writeXML(doc, f);
@@ -529,7 +510,7 @@ public final class XmlRequestUtil{
         writeXML(doc, f);
     }
 
-    public static Request getRequestFromXMLFile(final File f)
+    public static RequestBean getRequestFromXMLFile(final File f)
             throws IOException, XMLException {
         Document doc = getDocumentFromFile(f);
         return xml2Request(doc);
