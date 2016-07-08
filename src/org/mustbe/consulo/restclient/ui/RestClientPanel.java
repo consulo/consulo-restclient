@@ -36,7 +36,6 @@ import javax.swing.JPanel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 
-import org.consulo.lombok.annotations.ProjectService;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mustbe.consulo.restclient.RestClientHistoryManager;
@@ -94,7 +93,7 @@ import com.squareup.okhttp.Protocol;
 import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.ResponseBody;
-import lombok.val;
+import consulo.lombok.annotations.ProjectService;
 
 /**
  * @author VISTALL
@@ -296,7 +295,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 					@Override
 					public void run(@NotNull ProgressIndicator progressIndicator)
 					{
-						val request = getRequestBean();
+						final RequestBean request = getRequestBean();
 						if(request == null)
 						{
 							return;

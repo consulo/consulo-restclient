@@ -17,19 +17,23 @@
 package org.mustbe.consulo.restclient.actions;
 
 import java.awt.event.MouseEvent;
+import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
+import org.jetbrains.annotations.NotNull;
+import org.mustbe.consulo.RequiredDispatchThread;
 import org.mustbe.consulo.restclient.RestClientHistoryManager;
 import org.mustbe.consulo.restclient.ui.RestClientPanel;
+import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.ui.awt.RelativePoint;
-import lombok.val;
 
 /**
  * @author VISTALL
@@ -37,18 +41,19 @@ import lombok.val;
  */
 public class HistoryAction extends AnAction
 {
+	@RequiredDispatchThread
 	@Override
-	public void actionPerformed(AnActionEvent e)
+	public void actionPerformed(@NotNull AnActionEvent e)
 	{
-		val project = e.getProject();
+		final Project project = e.getProject();
 
-		val actionGroup = new DefaultActionGroup();
+		DefaultActionGroup actionGroup = new DefaultActionGroup();
 
-		val clientHistoryManager = RestClientHistoryManager.getInstance(e.getProject());
+		RestClientHistoryManager clientHistoryManager = RestClientHistoryManager.getInstance(e.getProject());
 
-		val requestBean = clientHistoryManager.getRequests().get(RestClientHistoryManager.LAST);
+		final RequestBean requestBean = clientHistoryManager.getRequests().get(RestClientHistoryManager.LAST);
 
-		for(val entry : RestClientHistoryManager.getInstance(e.getProject()).getRequests().entrySet())
+		for(final Map.Entry<String, RequestBean> entry : RestClientHistoryManager.getInstance(e.getProject()).getRequests().entrySet())
 		{
 			if(entry.getValue() == requestBean)
 			{
@@ -57,8 +62,9 @@ public class HistoryAction extends AnAction
 
 			AnAction anAction = new AnAction(entry.getKey())
 			{
+				@RequiredDispatchThread
 				@Override
-				public void actionPerformed(AnActionEvent anActionEvent)
+				public void actionPerformed(@NotNull AnActionEvent anActionEvent)
 				{
 
 					SwingUtilities.invokeLater(new Runnable()
@@ -78,8 +84,9 @@ public class HistoryAction extends AnAction
 		{
 			AnAction anAction = new AnAction(RestClientHistoryManager.LAST)
 			{
+				@RequiredDispatchThread
 				@Override
-				public void actionPerformed(AnActionEvent anActionEvent)
+				public void actionPerformed(@NotNull AnActionEvent anActionEvent)
 				{
 					SwingUtilities.invokeLater(new Runnable()
 					{

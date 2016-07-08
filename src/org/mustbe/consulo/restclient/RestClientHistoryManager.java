@@ -20,8 +20,6 @@ import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.consulo.lombok.annotations.Logger;
-import org.consulo.lombok.annotations.ProjectService;
 import org.jdom.Element;
 import org.jetbrains.annotations.Nullable;
 import org.wiztools.restclient.bean.RequestBean;
@@ -30,6 +28,8 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
+import consulo.lombok.annotations.Logger;
+import consulo.lombok.annotations.ProjectService;
 
 /**
  * @author VISTALL
