@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mustbe.consulo.restclient.ui;
+package consulo.restclient.ui;
 
 import java.awt.event.KeyEvent;
 

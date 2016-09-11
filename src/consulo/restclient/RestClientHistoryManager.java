@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mustbe.consulo.restclient;
+package consulo.restclient;
 
 import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
@@ -88,7 +88,7 @@ public class RestClientHistoryManager implements PersistentStateComponent<Elemen
 			}
 			catch(MalformedURLException e)
 			{
-				LOGGER.error(e);
+				RestClientHistoryManager.LOGGER.error(e);
 			}
 		}
 	}

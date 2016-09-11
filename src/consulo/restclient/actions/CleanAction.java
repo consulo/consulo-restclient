@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package org.mustbe.consulo.restclient.actions;
+package consulo.restclient.actions;
 
 import javax.swing.SwingUtilities;
 
-import org.mustbe.consulo.restclient.ui.RestClientPanel;
+import consulo.restclient.ui.RestClientPanel;
 import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;

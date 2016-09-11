@@ -9,39 +9,39 @@
 			<action id="RESTClientToolbarActions.History"
 					icon="AllIcons.General.MessageHistory"
 					text="History"
-					class="org.mustbe.consulo.restclient.actions.HistoryAction"/>
+					class="consulo.restclient.actions.HistoryAction"/>
 
 			<action id="RESTClientToolbarActions.Save"
 					icon="AllIcons.Actions.Menu_saveall"
 					text="Save"
-					class="org.mustbe.consulo.restclient.actions.SaveAction"/>
+					class="consulo.restclient.actions.SaveAction"/>
 
 			<action id="RESTClientToolbarActions.Clean"
 					icon="AllIcons.Actions.Unselectall"
 					text="Clean"
-					class="org.mustbe.consulo.restclient.actions.CleanAction"/>
+					class="consulo.restclient.actions.CleanAction"/>
 
 			<action id="RESTClientToolbarActions.Export"
 					icon="AllIcons.ToolbarDecorator.Export"
 					text="Export"
-					class="org.mustbe.consulo.restclient.actions.ExportRequestAction"/>
+					class="consulo.restclient.actions.ExportRequestAction"/>
 
 			<action id="RESTClientToolbarActions.Import"
 					icon="AllIcons.ToolbarDecorator.Import"
 					text="Import"
-					class="org.mustbe.consulo.restclient.actions.ImportRequestAction"/>
+					class="consulo.restclient.actions.ImportRequestAction"/>
 		</group>
 	</actions>
 
 	<extensions defaultExtensionNs="com.intellij">
-		<toolWindow id="REST Client" icon="/general/web.png" factoryClass="org.mustbe.consulo.restclient.ui.RestClientToolWindowFactory"
+		<toolWindow id="REST Client" icon="/general/web.png" factoryClass="consulo.restclient.ui.RestClientToolWindowFactory"
 					anchor="bottom"
 					canCloseContents="false"/>
 
-		<projectService serviceInterface="org.mustbe.consulo.restclient.RestClientHistoryManager"
-						serviceImplementation="org.mustbe.consulo.restclient.RestClientHistoryManager"/>
+		<projectService serviceInterface="consulo.restclient.RestClientHistoryManager"
+						serviceImplementation="consulo.restclient.RestClientHistoryManager"/>
 
-		<projectService serviceInterface="org.mustbe.consulo.restclient.ui.RestClientPanel"
-						serviceImplementation="org.mustbe.consulo.restclient.ui.RestClientPanel"/>
+		<projectService serviceInterface="consulo.restclient.ui.RestClientPanel"
+						serviceImplementation="consulo.restclient.ui.RestClientPanel"/>
 	</extensions>
 </idea-plugin>

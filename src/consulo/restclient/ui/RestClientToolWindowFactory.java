@@ -14,20 +14,26 @@
  * limitations under the License.
  */
 
-package org.mustbe.consulo.restclient.actions;
+package consulo.restclient.ui;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.openapi.wm.ToolWindowFactory;
+import com.intellij.ui.content.ContentFactory;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
-public class ImportRequestAction extends AnAction
+public class RestClientToolWindowFactory implements ToolWindowFactory
 {
 	@Override
-	public void actionPerformed(AnActionEvent anActionEvent)
+	public void createToolWindowContent(Project project, ToolWindow toolWindow)
 	{
+		ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
 
+		RestClientPanel restClientPanel = RestClientPanel.getInstance(project);
+
+		toolWindow.getContentManager().addContent(contentFactory.createContent(restClientPanel.getRootPanel(), "", true));
 	}
 }

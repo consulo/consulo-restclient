@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mustbe.consulo.restclient.actions;
+package consulo.restclient.actions;
 
 import java.awt.event.MouseEvent;
 import java.util.Map;
@@ -22,8 +22,8 @@ import java.util.Map;
 import javax.swing.SwingUtilities;
 
 import org.jetbrains.annotations.NotNull;
-import org.mustbe.consulo.restclient.RestClientHistoryManager;
-import org.mustbe.consulo.restclient.ui.RestClientPanel;
+import consulo.restclient.RestClientHistoryManager;
+import consulo.restclient.ui.RestClientPanel;
 import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mustbe.consulo.restclient.ui;
+package consulo.restclient.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -38,7 +38,6 @@ import javax.swing.SwingUtilities;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.mustbe.consulo.restclient.RestClientHistoryManager;
 import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.hint.HintUtil;
@@ -86,6 +85,7 @@ import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import com.intellij.util.ui.UIUtil;
 import consulo.lombok.annotations.ProjectService;
+import consulo.restclient.RestClientHistoryManager;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Headers;
