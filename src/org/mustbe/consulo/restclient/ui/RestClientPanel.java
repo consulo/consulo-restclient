@@ -23,10 +23,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -81,19 +81,20 @@ import com.intellij.ui.TextFieldWithAutoCompletion;
 import com.intellij.ui.table.JBTable;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.ui.ColumnInfo;
 import com.intellij.util.ui.ListTableModel;
 import com.intellij.util.ui.UIUtil;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
 import consulo.lombok.annotations.ProjectService;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * @author VISTALL
@@ -266,7 +267,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		};
 		myEditorTextField.setFontInheritedFromLAF(false);
 
-		responseSplitter.setSecondComponent(ScrollPaneFactory.createScrollPane(myEditorTextField, SideBorder.RIGHT));
+		responseSplitter.setSecondComponent(myEditorTextField);
 
 		myUrlTextField.addDocumentListener(new DocumentAdapter()
 		{
@@ -306,13 +307,19 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 						builder = builder.header("User-Agent", ApplicationInfo.getInstance().getVersionName());
 						Request build = builder.build();
 
-						OkHttpClient client = new OkHttpClient();
-						client.setProtocols(Arrays.<Protocol>asList(request.getHttpVersion()));
+						OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+						Set<Protocol> protocols = new ArrayListSet<>();
+						protocols.add(request.getHttpVersion());
+						protocols.add(Protocol.HTTP_1_1);
+
+						clientBuilder.protocols(new ArrayList<>(protocols));
+
+						OkHttpClient client = clientBuilder.build();
 						Call call = client.newCall(build);
 						call.enqueue(new Callback()
 						{
 							@Override
-							public void onFailure(Request request, final IOException e)
+							public void onFailure(Call call, IOException e)
 							{
 								SwingUtilities.invokeLater(new Runnable()
 								{
@@ -325,7 +332,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 							}
 
 							@Override
-							public void onResponse(final Response response) throws IOException
+							public void onResponse(Call call, Response response) throws IOException
 							{
 								new WriteAction<Object>()
 								{

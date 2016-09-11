@@ -22,7 +22,6 @@ import java.util.Map;
 import javax.swing.SwingUtilities;
 
 import org.jetbrains.annotations.NotNull;
-import org.mustbe.consulo.RequiredDispatchThread;
 import org.mustbe.consulo.restclient.RestClientHistoryManager;
 import org.mustbe.consulo.restclient.ui.RestClientPanel;
 import org.wiztools.restclient.bean.RequestBean;
@@ -34,6 +33,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.ui.awt.RelativePoint;
+import consulo.annotations.RequiredDispatchThread;
 
 /**
  * @author VISTALL

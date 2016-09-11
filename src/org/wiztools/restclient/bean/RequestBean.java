@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.intellij.util.containers.MultiMap;
-import com.squareup.okhttp.Protocol;
+import okhttp3.Protocol;
 
 /**
  *

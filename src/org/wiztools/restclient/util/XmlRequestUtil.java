@@ -32,7 +32,7 @@ import org.wiztools.restclient.bean.TestResult;
 import org.wiztools.restclient.bean.TestResultBean;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.containers.MultiMap;
-import com.squareup.okhttp.Protocol;
+import okhttp3.Protocol;
 
 /**
  *
