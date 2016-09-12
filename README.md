@@ -1,1 +1,1 @@
-![Build Status](http://must-be.org/vulcan/statusImage?name=consulo-restclient)
+[![Build Status](http://must-be.org/jenkins/job/consulo-restclient/badge/icon)](http://must-be.org/jenkins/job/consulo-restclient/)
