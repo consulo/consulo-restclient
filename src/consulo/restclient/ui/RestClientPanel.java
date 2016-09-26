@@ -17,8 +17,6 @@
 package consulo.restclient.ui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Insets;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,10 +28,8 @@ import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 
 import org.jetbrains.annotations.NotNull;
@@ -49,14 +45,11 @@ import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.application.ApplicationInfo;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
-import com.intellij.openapi.editor.ex.EditorEx;
-import com.intellij.openapi.editor.impl.EditorFactoryImpl;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.fileTypes.LanguageFileType;
@@ -65,36 +58,21 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.ui.ColoredListCellRendererWrapper;
-import com.intellij.ui.EditorTextField;
-import com.intellij.ui.JBSplitter;
-import com.intellij.ui.OnePixelSplitter;
-import com.intellij.ui.ScrollPaneFactory;
-import com.intellij.ui.SideBorder;
+import com.intellij.ui.ColoredListCellRenderer;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.ui.TextFieldWithAutoCompletion;
-import com.intellij.ui.table.JBTable;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.containers.ArrayListSet;
-import com.intellij.util.ui.ColumnInfo;
-import com.intellij.util.ui.ListTableModel;
+import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import consulo.lombok.annotations.ProjectService;
+import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
+import okhttp3.*;
 
 /**
  * @author VISTALL
@@ -107,24 +85,21 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			"GET",
 			"DELETE",
 			"HEAD",
-			//TODO [VISTALL] support request body
-			//"POST",
-			//"PUT",
-			//"PATCH"
+			"POST",
+			"PUT",
+			"PATCH"
 	};
-	private final JComboBox myMethodComboBox;
+
+	private final JComboBox<String> myMethodComboBox;
 	private final JPanel myRootPanel;
-	private final JPanel myResponseTab;
 
 	private final TextFieldWithAutoCompletionWithEnter myUrlTextField;
-	private final JLabel myResultLabel;
-	private final JComboBox myHttpVersionBox;
+	private final JComboBox<Protocol> myHttpVersionBox;
 
-	private List<Pair<String, String>> myHeaders = new ArrayList<Pair<String, String>>();
+	private RestRequestOrResponsePanel myRequestPanel;
+	private RestRequestOrResponsePanel myResponsePanel;
 
-	private EditorTextField myEditorTextField;
-
-	public RestClientPanel(final Project project)
+	public RestClientPanel(@NotNull final Project project)
 	{
 		super(project);
 
@@ -135,11 +110,11 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		panel1.setLayout(new BorderLayout(0, 0));
 		myRootPanel.add(panel1, BorderLayout.CENTER);
 		final JPanel panel2 = new JPanel();
-		panel2.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+		panel2.setLayout(new GridLayoutManager(1, 3, JBUI.emptyInsets(), -1, -1));
 		panel1.add(panel2, BorderLayout.NORTH);
-		myMethodComboBox = new JComboBox();
-		panel2.add(myMethodComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
-				GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		myMethodComboBox = new JComboBox<>();
+		panel2.add(myMethodComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints
+				.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		myUrlTextField = new TextFieldWithAutoCompletionWithEnter(get(), new TextFieldWithAutoCompletion.StringsCompletionProvider(null, null)
 		{
 			@NotNull
@@ -151,7 +126,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 					return Collections.emptyList();
 				}
 
-				List<String> list = new ArrayList<String>();
+				List<String> list = new ArrayList<>();
 				for(RequestBean o : RestClientHistoryManager.getInstance(get()).getRequests().values())
 				{
 					list.add(o.getUrl().toString());
@@ -160,36 +135,26 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			}
 		}, false, null);
 		myUrlTextField.setPlaceholder("URL");
-		panel2.add(myUrlTextField, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
-				GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-		myHttpVersionBox = new JComboBox();
-		panel2.add(myHttpVersionBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
-				GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+		panel2.add(myUrlTextField, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints
+				.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		myHttpVersionBox = new JComboBox<>();
+		panel2.add(myHttpVersionBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints
+				.SIZEPOLICY_FIXED, null, null, null, 0, false));
 
 		final TabbedPaneWrapper tabbedPaneWrapper = new TabbedPaneWrapper(this);
 		panel1.add(tabbedPaneWrapper.getComponent(), BorderLayout.CENTER);
-		myResponseTab = new JPanel();
-		myResponseTab.setLayout(new BorderLayout(0, 0));
-		tabbedPaneWrapper.addTab("Response", myResponseTab);
-		final JPanel panel3 = new JPanel();
-		panel3.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-		myResponseTab.add(panel3, BorderLayout.CENTER);
-		JBSplitter responseSplitter = new OnePixelSplitter();
-		responseSplitter.setLayout(new BorderLayout(0, 0));
-		panel3.add(responseSplitter, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH,
-				GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-		myResultLabel = new JLabel();
-		myResultLabel.setEnabled(true);
-		myResultLabel.setText("");
-		panel3.add(myResultLabel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_HORIZONTAL,
-				GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
 
-		myMethodComboBox.setRenderer(new ColoredListCellRendererWrapper<String>()
+		myRequestPanel = new RestRequestOrResponsePanel(project, true);
+		myResponsePanel = new RestRequestOrResponsePanel(project, false);
+
+		tabbedPaneWrapper.addTab("Request", myRequestPanel);
+		tabbedPaneWrapper.addTab("Response", myResponsePanel);
+		tabbedPaneWrapper.setSelectedComponent(myResponsePanel);
+
+		myMethodComboBox.setRenderer(new ColoredListCellRenderer<String>()
 		{
 			@Override
-			protected void doCustomize(JList list, String value, int index, boolean selected, boolean hasFocus)
+			protected void customizeCellRenderer(@NotNull JList list, String value, int index, boolean selected, boolean hasFocus)
 			{
 				if(index == -1)
 				{
@@ -204,10 +169,10 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			myMethodComboBox.addItem(httpMethod);
 		}
 
-		myHttpVersionBox.setRenderer(new ColoredListCellRendererWrapper<Protocol>()
+		myHttpVersionBox.setRenderer(new ColoredListCellRenderer<Protocol>()
 		{
 			@Override
-			protected void doCustomize(JList list, Protocol value, int index, boolean selected, boolean hasFocus)
+			protected void customizeCellRenderer(@NotNull JList list, Protocol value, int index, boolean selected, boolean hasFocus)
 			{
 				if(index == -1)
 				{
@@ -216,6 +181,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				append(value.toString());
 			}
 		});
+
 		for(Protocol httpVersion : Protocol.values())
 		{
 			if(httpVersion == Protocol.HTTP_1_0)
@@ -224,50 +190,6 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			}
 			myHttpVersionBox.addItem(httpVersion);
 		}
-
-		responseSplitter.setProportion(0.2f);
-		responseSplitter.setSplitterProportionKey("RestClientPanel#response");
-
-		ListTableModel<Pair<String, String>> model = new ListTableModel<Pair<String, String>>(new ColumnInfo[]{
-				new ColumnInfo<Pair<String, String>, String>("HTTP Header")
-				{
-					@Nullable
-					@Override
-					public String valueOf(Pair<String, String> pair)
-					{
-						return pair.getFirst();
-					}
-				},
-				new ColumnInfo<Pair<String, String>, String>("Value")
-				{
-					@Nullable
-					@Override
-					public String valueOf(Pair<String, String> pair)
-					{
-						return pair.getSecond();
-					}
-				}
-		}, myHeaders, 0);
-
-
-		final JBTable table = new JBTable(model);
-		table.setShowColumns(true);
-
-		responseSplitter.setFirstComponent(ScrollPaneFactory.createScrollPane(table, SideBorder.LEFT | SideBorder.BOTTOM));
-
-		myEditorTextField = new EditorTextField(EditorFactory.getInstance().createDocument(""), project, PlainTextFileType.INSTANCE, true, false)
-		{
-			@Override
-			protected EditorEx createEditor()
-			{
-				EditorEx editor = super.createEditor();
-				editor.getScrollPane().setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
-				return editor;
-			}
-		};
-		myEditorTextField.setFontInheritedFromLAF(false);
-
-		responseSplitter.setSecondComponent(myEditorTextField);
 
 		myUrlTextField.addDocumentListener(new DocumentAdapter()
 		{
@@ -286,120 +208,129 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			}
 		});
 
-		myUrlTextField.setEnterAction(new Runnable()
+		myUrlTextField.setEnterAction(() -> new Task.Backgroundable(project, "Executing request to: " + myUrlTextField.getText(), false)
 		{
 			@Override
-			public void run()
+			public void run(@NotNull ProgressIndicator progressIndicator)
 			{
-				new Task.Backgroundable(project, "Executing request to: " + myUrlTextField.getText(), false)
+				final RequestBean request = getRequestBean();
+				if(request == null)
+				{
+					return;
+				}
+				Request.Builder builder = new Request.Builder();
+				String contentType = null;
+				for(HttpHeader httpHeader : myRequestPanel.getHeaders())
+				{
+					String name = httpHeader.getName();
+					String value = httpHeader.getValue();
+					if(name.equals("Content-Type"))
+					{
+						contentType = value;
+					}
+					builder = builder.addHeader(name, value);
+				}
+				builder = builder.header("User-Agent", ApplicationInfo.getInstance().getVersionName());
+
+				String methodType = (String) myMethodComboBox.getSelectedItem();
+				switch(methodType)
+				{
+					case "GET":
+					case "HEAD":
+					case "DELETE":
+						builder = builder.method(methodType, null);
+						break;
+					case "PUT":
+					case "POST":
+					case "PATCH":
+					case "TAG":
+						String text = myRequestPanel.getText();
+						RequestBody body = RequestBody.create(contentType == null ? null : MediaType.parse(contentType), text);
+						builder = builder.method(methodType, body);
+						break;
+				}
+
+				builder = builder.url(request.getUrl());
+
+				Request build = builder.build();
+
+				OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
+				Set<Protocol> protocols = new ArrayListSet<>();
+				protocols.add(request.getHttpVersion());
+				protocols.add(Protocol.HTTP_1_1);
+
+				clientBuilder.protocols(new ArrayList<>(protocols));
+
+				OkHttpClient client = clientBuilder.build();
+				Call call = client.newCall(build);
+				call.enqueue(new Callback()
 				{
 					@Override
-					public void run(@NotNull ProgressIndicator progressIndicator)
+					public void onFailure(Call call, IOException e)
 					{
-						final RequestBean request = getRequestBean();
-						if(request == null)
-						{
-							return;
-						}
-						Request.Builder builder = new Request.Builder();
-						builder = builder.method((String) myMethodComboBox.getSelectedItem(), null);
-						builder = builder.url(request.getUrl());
-						builder = builder.header("User-Agent", ApplicationInfo.getInstance().getVersionName());
-						Request build = builder.build();
-
-						OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
-						Set<Protocol> protocols = new ArrayListSet<>();
-						protocols.add(request.getHttpVersion());
-						protocols.add(Protocol.HTTP_1_1);
-
-						clientBuilder.protocols(new ArrayList<>(protocols));
-
-						OkHttpClient client = clientBuilder.build();
-						Call call = client.newCall(build);
-						call.enqueue(new Callback()
-						{
-							@Override
-							public void onFailure(Call call, IOException e)
-							{
-								SwingUtilities.invokeLater(new Runnable()
-								{
-									@Override
-									public void run()
-									{
-										Messages.showErrorDialog(e.getMessage(), "Error While Processing Request");
-									}
-								});
-							}
-
-							@Override
-							public void onResponse(Call call, Response response) throws IOException
-							{
-								new WriteAction<Object>()
-								{
-									@Override
-									protected void run(Result<Object> objectResult) throws Throwable
-									{
-										myResultLabel.setText(String.valueOf(response.code()));
-										myHeaders.clear();
-
-										Headers headers = response.headers();
-										for(String headerName : headers.names())
-										{
-											myHeaders.add(new Pair<String, String>(headerName, StringUtil.join(headers.values(headerName), ";")));
-										}
-
-										table.revalidate();
-										FileType fileType = null;
-
-										ResponseBody body = response.body();
-										if(body != null)
-										{
-											MediaType contentType = body.contentType();
-											if(contentType != null)
-											{
-												String mime = contentType.type() + "/" + contentType.subtype();
-												Collection<Language> languages = Language.findInstancesByMimeType(mime);
-												if(!languages.isEmpty())
-												{
-													for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
-													{
-														if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
-														{
-															fileType = type;
-														}
-													}
-												}
-											}
-
-											if(fileType == null)
-											{
-												fileType = PlainTextFileType.INSTANCE;
-											}
-
-											EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
-											Document document = editorFactory.createDocument(body.string(), true, true);
-
-											myEditorTextField.setNewDocumentAndFileType(fileType, document);
-
-											RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
-
-											SwingUtilities.invokeLater(new Runnable()
-											{
-												@Override
-												public void run()
-												{
-													tabbedPaneWrapper.setSelectedComponent(myResponseTab);
-												}
-											});
-										}
-									}
-								}.execute();
-							}
-						});
+						SwingUtilities.invokeLater(() -> Messages.showErrorDialog(e.getMessage(), "Error While Processing Request"));
 					}
-				}.queue();
+
+					@Override
+					public void onResponse(Call call, Response response) throws IOException
+					{
+						ApplicationManager.getApplication().invokeLater(() -> {
+							myResponsePanel.setStatusLabel(String.valueOf(response.code()) + " " + response.message());
+
+							List<HttpHeader> headersAsList = new ArrayList<>();
+							Headers headers = response.headers();
+							for(String headerName : headers.names())
+							{
+								headersAsList.add(new HttpHeader(headerName, StringUtil.join(headers.values(headerName), ";")));
+							}
+
+							myResponsePanel.setHeaders(headersAsList);
+						});
+
+						new WriteAction<Object>()
+						{
+							@Override
+							protected void run(Result<Object> objectResult) throws Throwable
+							{
+								FileType fileType = null;
+
+								ResponseBody body = response.body();
+								if(body != null)
+								{
+									MediaType contentType = body.contentType();
+									if(contentType != null)
+									{
+										String mime = contentType.type() + "/" + contentType.subtype();
+										Collection<Language> languages = Language.findInstancesByMimeType(mime);
+										if(!languages.isEmpty())
+										{
+											for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
+											{
+												if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
+												{
+													fileType = type;
+												}
+											}
+										}
+									}
+
+									if(fileType == null)
+									{
+										fileType = PlainTextFileType.INSTANCE;
+									}
+
+									myResponsePanel.setText(fileType, body.string());
+
+									RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
+
+									SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
+								}
+							}
+						}.execute();
+					}
+				});
 			}
-		});
+		}.queue());
 
 		AnAction restClientToolbarActions = ActionManager.getInstance().getAction("RESTClientToolbarActions");
 
@@ -411,7 +342,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 	@Nullable
 	public RequestBean getRequestBean()
 	{
-		URL url = null;
+		URL url;
 		try
 		{
 			url = new URL(myUrlTextField.getText());
@@ -421,6 +352,10 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			return null;
 		}
 		RequestBean request = new RequestBean();
+		for(HttpHeader header : myRequestPanel.getHeaders())
+		{
+			request.addHeader(header.getName(), header.getValue());
+		}
 		request.setUrl(url);
 		request.setMethod((String) myMethodComboBox.getSelectedItem());
 		request.setHttpVersion((Protocol) myHttpVersionBox.getSelectedItem());
@@ -443,6 +378,5 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 	@Override
 	public void dispose()
 	{
-		myEditorTextField.setDocument(null);
 	}
 }
