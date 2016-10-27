@@ -2,7 +2,7 @@
 	<id>consulo.restclient</id>
 	<name>REST Client</name>
 	<version>SNAPSHOT</version>
-	<vendor>Must-Be.org</vendor>
+	<vendor>consulo.io</vendor>
 
 	<actions>
 		<group id="RESTClientToolbarActions">
