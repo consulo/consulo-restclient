@@ -16,6 +16,8 @@
 
 package consulo.restclient.ui;
 
+import org.jetbrains.annotations.NotNull;
+import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
@@ -25,10 +27,10 @@ import com.intellij.ui.content.ContentFactory;
  * @author VISTALL
  * @since 20.11.13.
  */
-public class RestClientToolWindowFactory implements ToolWindowFactory
+public class RestClientToolWindowFactory implements ToolWindowFactory, DumbAware
 {
 	@Override
-	public void createToolWindowContent(Project project, ToolWindow toolWindow)
+	public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow)
 	{
 		ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
 
