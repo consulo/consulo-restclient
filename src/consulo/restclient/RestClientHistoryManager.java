@@ -21,15 +21,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jdom.Element;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.wiztools.restclient.bean.RequestBean;
 import org.wiztools.restclient.util.XmlRequestUtil;
 import com.intellij.openapi.components.PersistentStateComponent;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.components.StoragePathMacros;
-import consulo.lombok.annotations.Logger;
-import consulo.lombok.annotations.ProjectService;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
 
 /**
  * @author VISTALL
@@ -42,10 +44,16 @@ import consulo.lombok.annotations.ProjectService;
 						file = StoragePathMacros.WORKSPACE_FILE
 				)}
 )
-@ProjectService
-@Logger
 public class RestClientHistoryManager implements PersistentStateComponent<Element>
 {
+	private static final Logger LOGGER = Logger.getInstance(RestClientHistoryManager.class);
+
+	@NotNull
+	public static RestClientHistoryManager getInstance(@NotNull Project project)
+	{
+		return ServiceManager.getService(project, RestClientHistoryManager.class);
+	}
+
 	public static final String LAST = "~ Last";
 
 	private Map<String, RequestBean> myHistory = new LinkedHashMap<String, RequestBean>();

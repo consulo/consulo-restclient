@@ -48,6 +48,7 @@ import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.event.DocumentAdapter;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.fileTypes.FileType;
@@ -69,7 +70,6 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
-import consulo.lombok.annotations.ProjectService;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
 import okhttp3.*;
@@ -78,9 +78,14 @@ import okhttp3.*;
  * @author VISTALL
  * @since 20.11.13.
  */
-@ProjectService
 public class RestClientPanel extends Ref<Project> implements Disposable
 {
+	@NotNull
+	public static RestClientPanel getInstance(@NotNull Project project)
+	{
+		return ServiceManager.getService(project, RestClientPanel.class);
+	}
+
 	private static final String[] ourSupportedMethods = new String[]{
 			"GET",
 			"DELETE",
