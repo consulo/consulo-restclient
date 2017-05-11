@@ -17,7 +17,6 @@
 package consulo.restclient.ui;
 
 import java.awt.BorderLayout;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -25,6 +24,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -55,6 +56,7 @@ import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeRegistry;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import com.intellij.openapi.fileTypes.PlainTextFileType;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
@@ -67,12 +69,21 @@ import com.intellij.ui.TabbedPaneWrapper;
 import com.intellij.ui.TextFieldWithAutoCompletion;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
-import okhttp3.*;
+import okhttp3.Call;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  * @author VISTALL
@@ -213,7 +224,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			}
 		});
 
-		myUrlTextField.setEnterAction(() -> new Task.Backgroundable(project, "Executing request to: " + myUrlTextField.getText(), false)
+		myUrlTextField.setEnterAction(() -> new Task.Backgroundable(project, "Executing request to: " + myUrlTextField.getText(), true)
 		{
 			@Override
 			public void run(@NotNull ProgressIndicator progressIndicator)
@@ -265,75 +276,93 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				protocols.add(Protocol.HTTP_1_1);
 
 				clientBuilder.protocols(new ArrayList<>(protocols));
+				clientBuilder.connectTimeout(1, TimeUnit.HOURS);
+				clientBuilder.readTimeout(1, TimeUnit.HOURS);
+				clientBuilder.writeTimeout(1, TimeUnit.HOURS);
 
 				OkHttpClient client = clientBuilder.build();
 				Call call = client.newCall(build);
-				call.enqueue(new Callback()
+
+				ScheduledFuture<?> cancelCheckFuture = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() ->
 				{
-					@Override
-					public void onFailure(Call call, IOException e)
+					try
 					{
-						SwingUtilities.invokeLater(() -> Messages.showErrorDialog(e.getMessage(), "Error While Processing Request"));
+						progressIndicator.checkCanceled();
 					}
-
-					@Override
-					public void onResponse(Call call, Response response) throws IOException
+					catch(ProcessCanceledException e)
 					{
-						ApplicationManager.getApplication().invokeLater(() -> {
-							myResponsePanel.setStatusLabel(String.valueOf(response.code()) + " " + response.message());
+						call.cancel();
+					}
+				}, 1, 1, TimeUnit.SECONDS);
 
-							List<HttpHeader> headersAsList = new ArrayList<>();
-							Headers headers = response.headers();
-							for(String headerName : headers.names())
-							{
-								headersAsList.add(new HttpHeader(headerName, StringUtil.join(headers.values(headerName), ";")));
-							}
+				try (Response response = call.execute())
+				{
+					cancelCheckFuture.cancel(false);
 
-							myResponsePanel.setHeaders(headersAsList);
-						});
+					ApplicationManager.getApplication().invokeLater(() ->
+					{
+						myResponsePanel.setStatusLabel(String.valueOf(response.code()) + " " + response.message());
 
-						new WriteAction<Object>()
+						List<HttpHeader> headersAsList = new ArrayList<>();
+						Headers headers = response.headers();
+						for(String headerName : headers.names())
 						{
-							@Override
-							protected void run(Result<Object> objectResult) throws Throwable
-							{
-								FileType fileType = null;
+							headersAsList.add(new HttpHeader(headerName, StringUtil.join(headers.values(headerName), ";")));
+						}
 
-								ResponseBody body = response.body();
-								if(body != null)
+						myResponsePanel.setHeaders(headersAsList);
+					});
+
+					new WriteAction<Object>()
+					{
+						@Override
+						protected void run(Result<Object> objectResult) throws Throwable
+						{
+							FileType fileType = null;
+
+							ResponseBody body = response.body();
+							if(body != null)
+							{
+								MediaType contentType = body.contentType();
+								if(contentType != null)
 								{
-									MediaType contentType = body.contentType();
-									if(contentType != null)
+									String mime = contentType.type() + "/" + contentType.subtype();
+									Collection<Language> languages = Language.findInstancesByMimeType(mime);
+									if(!languages.isEmpty())
 									{
-										String mime = contentType.type() + "/" + contentType.subtype();
-										Collection<Language> languages = Language.findInstancesByMimeType(mime);
-										if(!languages.isEmpty())
+										for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
 										{
-											for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
+											if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
 											{
-												if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
-												{
-													fileType = type;
-												}
+												fileType = type;
 											}
 										}
 									}
-
-									if(fileType == null)
-									{
-										fileType = PlainTextFileType.INSTANCE;
-									}
-
-									myResponsePanel.setText(fileType, body.string());
-
-									RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
-
-									SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
 								}
+
+								if(fileType == null)
+								{
+									fileType = PlainTextFileType.INSTANCE;
+								}
+
+								myResponsePanel.setText(fileType, body.string());
+
+								RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
+
+								SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
 							}
-						}.execute();
+						}
+					}.execute();
+				}
+				catch(Throwable e)
+				{
+					cancelCheckFuture.cancel(false);
+
+					if(!call.isCanceled())
+					{
+						SwingUtilities.invokeLater(() -> Messages.showErrorDialog(e.getMessage(), "Error While Processing Request"));
 					}
-				});
+				}
 			}
 		}.queue());
 
