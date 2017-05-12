@@ -60,9 +60,10 @@ import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.ColoredListCellRenderer;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.TabbedPaneWrapper;
@@ -91,6 +92,8 @@ import okhttp3.ResponseBody;
  */
 public class RestClientPanel extends Ref<Project> implements Disposable
 {
+	private static final String ourToolwindowId = "REST Client";
+
 	@NotNull
 	public static RestClientPanel getInstance(@NotNull Project project)
 	{
@@ -244,6 +247,10 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 					{
 						contentType = value;
 					}
+					if(StringUtil.isEmpty(name))
+					{
+						continue;
+					}
 					builder = builder.addHeader(name, value);
 				}
 				builder = builder.header("User-Agent", ApplicationInfo.getInstance().getVersionName());
@@ -295,8 +302,11 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 					}
 				}, 1, 1, TimeUnit.SECONDS);
 
+				long time = System.currentTimeMillis();
 				try (Response response = call.execute())
 				{
+					showBallon("successed", time, response.code(), response.message(), MessageType.INFO);
+
 					cancelCheckFuture.cancel(false);
 
 					ApplicationManager.getApplication().invokeLater(() ->
@@ -360,7 +370,11 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 
 					if(!call.isCanceled())
 					{
-						SwingUtilities.invokeLater(() -> Messages.showErrorDialog(e.getMessage(), "Error While Processing Request"));
+						showBallon("timeouted", time, -1, null, MessageType.ERROR);
+					}
+					else
+					{
+						showBallon("canceled", time, -1, null, MessageType.WARNING);
 					}
 				}
 			}
@@ -371,6 +385,20 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		ActionToolbar actionToolbar = ActionManager.getInstance().createActionToolbar(ActionPlaces.UNKNOWN, (ActionGroup) restClientToolbarActions, false);
 
 		myRootPanel.add(actionToolbar.getComponent(), BorderLayout.WEST);
+	}
+
+	private void showBallon(String reason, long startTime, int code, String message, MessageType type)
+	{
+		long l = System.currentTimeMillis();
+		UIUtil.invokeLaterIfNeeded(() ->
+		{
+			String body = "Request " + reason + " in " + StringUtil.formatDuration(l - startTime);
+			if(code != -1)
+			{
+				body += ". Status " + code + " " + message;
+			}
+			ToolWindowManager.getInstance(get()).notifyByBalloon(ourToolwindowId, type, body);
+		});
 	}
 
 	@Nullable
