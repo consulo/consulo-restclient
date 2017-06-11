@@ -153,7 +153,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				return list;
 			}
 		}, false, null);
-		myUrlTextField.setPlaceholder("URL");
+		myUrlTextField.setPlaceholder("URL. Hit 'Enter' for execute");
 		panel2.add(myUrlTextField, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints
 				.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
 		myHttpVersionBox = new JComboBox<>();
