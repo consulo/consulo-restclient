@@ -156,7 +156,7 @@ public class RestRequestOrResponsePanel extends JPanel
 		};
 		myEditorTextField.setBorder(null);
 		myEditorTextField.setFontInheritedFromLAF(false);
-		splitter.setSecondComponent(ScrollPaneFactory.createScrollPane(myEditorTextField, true));
+		splitter.setSecondComponent(myEditorTextField);
 	}
 
 	public void setStatusLabel(String label)

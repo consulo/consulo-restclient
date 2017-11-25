@@ -32,7 +32,7 @@ public class RestClientToolWindowFactory implements ToolWindowFactory, DumbAware
 	@Override
 	public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow)
 	{
-		ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+		ContentFactory contentFactory = ContentFactory.getInstance();
 
 		RestClientPanel restClientPanel = RestClientPanel.getInstance(project);
 
