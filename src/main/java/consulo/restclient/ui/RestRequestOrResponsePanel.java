@@ -19,13 +19,13 @@ package consulo.restclient.ui;
 import java.awt.BorderLayout;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.ScrollPaneConstants;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.ex.EditorEx;
@@ -56,7 +56,7 @@ public class RestRequestOrResponsePanel extends JPanel
 
 	private JLabel myStatusPanel;
 
-	public RestRequestOrResponsePanel(@NotNull Project project, boolean request)
+	public RestRequestOrResponsePanel(@Nonnull Project project, boolean request)
 	{
 		super(new BorderLayout());
 
@@ -169,7 +169,7 @@ public class RestRequestOrResponsePanel extends JPanel
 		myModel.setItems(headers);
 	}
 
-	@NotNull
+	@Nonnull
 	public List<HttpHeader> getHeaders()
 	{
 		return myModel.getItems();

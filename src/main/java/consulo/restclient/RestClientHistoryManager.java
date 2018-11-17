@@ -21,8 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.jdom.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.wiztools.restclient.bean.RequestBean;
 import org.wiztools.restclient.util.XmlRequestUtil;
 import com.intellij.openapi.components.PersistentStateComponent;
@@ -48,8 +48,8 @@ public class RestClientHistoryManager implements PersistentStateComponent<Elemen
 {
 	private static final Logger LOGGER = Logger.getInstance(RestClientHistoryManager.class);
 
-	@NotNull
-	public static RestClientHistoryManager getInstance(@NotNull Project project)
+	@Nonnull
+	public static RestClientHistoryManager getInstance(@Nonnull Project project)
 	{
 		return ServiceManager.getService(project, RestClientHistoryManager.class);
 	}

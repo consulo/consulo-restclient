@@ -19,9 +19,9 @@ package consulo.restclient.actions;
 import java.awt.event.MouseEvent;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.swing.SwingUtilities;
 
-import org.jetbrains.annotations.NotNull;
 import consulo.restclient.RestClientHistoryManager;
 import consulo.restclient.ui.RestClientPanel;
 import org.wiztools.restclient.bean.RequestBean;
@@ -43,7 +43,7 @@ public class HistoryAction extends AnAction
 {
 	@RequiredDispatchThread
 	@Override
-	public void actionPerformed(@NotNull AnActionEvent e)
+	public void actionPerformed(@Nonnull AnActionEvent e)
 	{
 		final Project project = e.getProject();
 
@@ -64,7 +64,7 @@ public class HistoryAction extends AnAction
 			{
 				@RequiredDispatchThread
 				@Override
-				public void actionPerformed(@NotNull AnActionEvent anActionEvent)
+				public void actionPerformed(@Nonnull AnActionEvent anActionEvent)
 				{
 
 					SwingUtilities.invokeLater(new Runnable()
@@ -86,7 +86,7 @@ public class HistoryAction extends AnAction
 			{
 				@RequiredDispatchThread
 				@Override
-				public void actionPerformed(@NotNull AnActionEvent anActionEvent)
+				public void actionPerformed(@Nonnull AnActionEvent anActionEvent)
 				{
 					SwingUtilities.invokeLater(new Runnable()
 					{

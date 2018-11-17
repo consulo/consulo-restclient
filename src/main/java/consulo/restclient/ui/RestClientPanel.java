@@ -27,14 +27,14 @@ import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nonnull;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.hint.HintUtil;
@@ -94,8 +94,8 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 {
 	private static final String ourToolwindowId = "REST Client";
 
-	@NotNull
-	public static RestClientPanel getInstance(@NotNull Project project)
+	@Nonnull
+	public static RestClientPanel getInstance(@Nonnull Project project)
 	{
 		return ServiceManager.getService(project, RestClientPanel.class);
 	}
@@ -118,7 +118,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 	private RestRequestOrResponsePanel myRequestPanel;
 	private RestRequestOrResponsePanel myResponsePanel;
 
-	public RestClientPanel(@NotNull final Project project)
+	public RestClientPanel(@Nonnull final Project project)
 	{
 		super(project);
 
@@ -136,7 +136,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				.SIZEPOLICY_FIXED, null, null, null, 0, false));
 		myUrlTextField = new TextFieldWithAutoCompletionWithEnter(get(), new TextFieldWithAutoCompletion.StringsCompletionProvider(null, null)
 		{
-			@NotNull
+			@Nonnull
 			@Override
 			public Collection<String> getItems(String prefix, boolean cached, CompletionParameters parameters)
 			{
@@ -173,7 +173,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		myMethodComboBox.setRenderer(new ColoredListCellRenderer<String>()
 		{
 			@Override
-			protected void customizeCellRenderer(@NotNull JList list, String value, int index, boolean selected, boolean hasFocus)
+			protected void customizeCellRenderer(@Nonnull JList list, String value, int index, boolean selected, boolean hasFocus)
 			{
 				if(index == -1)
 				{
@@ -191,7 +191,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		myHttpVersionBox.setRenderer(new ColoredListCellRenderer<Protocol>()
 		{
 			@Override
-			protected void customizeCellRenderer(@NotNull JList list, Protocol value, int index, boolean selected, boolean hasFocus)
+			protected void customizeCellRenderer(@Nonnull JList list, Protocol value, int index, boolean selected, boolean hasFocus)
 			{
 				if(index == -1)
 				{
@@ -230,7 +230,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		myUrlTextField.setEnterAction(() -> new Task.Backgroundable(project, "Executing request to: " + myUrlTextField.getText(), true)
 		{
 			@Override
-			public void run(@NotNull ProgressIndicator progressIndicator)
+			public void run(@Nonnull ProgressIndicator progressIndicator)
 			{
 				final RequestBean request = getRequestBean();
 				if(request == null)
