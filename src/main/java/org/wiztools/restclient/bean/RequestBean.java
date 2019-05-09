@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.intellij.util.containers.MultiMap;
-import okhttp3.Protocol;
 
 /**
  *
