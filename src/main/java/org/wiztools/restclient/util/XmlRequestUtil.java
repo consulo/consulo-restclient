@@ -32,7 +32,6 @@ import org.wiztools.restclient.bean.TestResult;
 import org.wiztools.restclient.bean.TestResultBean;
 import com.intellij.openapi.util.JDOMUtil;
 import com.intellij.util.containers.MultiMap;
-import okhttp3.Protocol;
 
 /**
  *
@@ -51,12 +50,6 @@ public final class XmlRequestUtil{
 
     public static Element getRequestElement(final RequestBean bean) {
         Element reqElement = new Element("request");
-
-        { // HTTP Version
-            Element e = new Element("http-version");
-            e.addContent(bean.getHttpVersion().toString());
-            reqElement.addContent(e);
-        }
 
         if(bean.isFollowRedirect()) { // HTTP Follow Redirect
             Element e = new Element("http-follow-redirects");
@@ -192,17 +185,7 @@ public final class XmlRequestUtil{
         for (int i = 0; i < requestNode.getChildren().size(); i++) {
             Element tNode = requestNode.getChildren().get(i);
             String nodeName = tNode.getQualifiedName();
-            if ("http-version".equals(nodeName)) {
-                try
-                {
-                    requestBean.setHttpVersion(Protocol.get(tNode.getValue()));
-                }
-                catch(IOException e)
-                {
-					requestBean.setHttpVersion(Protocol.HTTP_1_1);
-                }
-            }
-            else if("http-follow-redirects".equals(nodeName)) {
+            if("http-follow-redirects".equals(nodeName)) {
                 requestBean.setFollowRedirect(true);
             }
             else if("ignore-response-body".equals(nodeName)) {
@@ -239,9 +222,6 @@ public final class XmlRequestUtil{
             }
             else if ("test-script".equals(nodeName)) {
                 requestBean.setTestScript(tNode.getValue());
-            }
-            else {
-                throw new XMLException("Invalid element encountered: <" + nodeName + ">");
             }
         }
         return requestBean;

@@ -23,7 +23,6 @@ public final class RequestBean {
     private ReqEntity body;
     private String testScript;
     private SSLReq sslReq;
-    private Protocol httpVersion = Protocol.HTTP_1_1;
     private boolean isFollowRedirect;
     private boolean isIgnoreResponseBody = false;
     
@@ -45,15 +44,7 @@ public final class RequestBean {
         this.sslReq = sslReq;
     }
 
-    
-    public Protocol getHttpVersion() {
-        return httpVersion;
-    }
 
-    public void setHttpVersion(Protocol httpVersion) {
-        this.httpVersion = httpVersion;
-    }
-    
     
     public String getTestScript() {
         return testScript;
@@ -130,7 +121,6 @@ public final class RequestBean {
     public Object clone(){
         RequestBean cloned = new RequestBean();
         cloned.setSslReq(sslReq);
-        cloned.setHttpVersion(httpVersion);
         if(body != null){
             cloned.setBody((ReqEntityStringBean)body.clone());
         }
@@ -187,9 +177,6 @@ public final class RequestBean {
         if (this.sslReq != other.sslReq && (this.sslReq == null || !this.sslReq.equals(other.sslReq))) {
             return false;
         }
-        if (this.httpVersion != other.httpVersion) {
-            return false;
-        }
         if (this.isFollowRedirect != other.isFollowRedirect) {
             return false;
         }
@@ -210,7 +197,6 @@ public final class RequestBean {
         hash = 23 * hash + (this.body != null ? this.body.hashCode() : 0);
         hash = 23 * hash + (this.testScript != null ? this.testScript.hashCode() : 0);
         hash = 23 * hash + (this.sslReq != null ? this.sslReq.hashCode() : 0);
-        hash = 23 * hash + (this.httpVersion != null ? this.httpVersion.hashCode() : 0);
         hash = 23 * hash + (this.isFollowRedirect ? 1 : 0);
         hash = 23 * hash + (this.isIgnoreResponseBody ? 1 : 0);
         return hash;
@@ -227,7 +213,6 @@ public final class RequestBean {
         sb.append(body).append(", ");
         sb.append(auth).append(", ");
         sb.append(sslReq).append(", ");
-        sb.append(httpVersion).append(", ");
         sb.append(isFollowRedirect).append(", ");
         sb.append(isIgnoreResponseBody).append(", ");
         sb.append(testScript);

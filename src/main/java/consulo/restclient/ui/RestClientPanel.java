@@ -18,23 +18,36 @@ package consulo.restclient.ui;
 
 import java.awt.BorderLayout;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import javax.annotation.Nullable;
+import org.apache.hc.client5.http.async.methods.SimpleBody;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
 import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.hint.HintUtil;
@@ -45,8 +58,8 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.ActionPlaces;
 import com.intellij.openapi.actionSystem.ActionToolbar;
 import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationInfo;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.components.ServiceManager;
@@ -61,7 +74,6 @@ import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.ColoredListCellRenderer;
@@ -71,26 +83,17 @@ import com.intellij.ui.TextFieldWithAutoCompletion;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.concurrency.AppExecutorUtil;
-import com.intellij.util.containers.ArrayListSet;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
-import okhttp3.Call;
-import okhttp3.Headers;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
-public class RestClientPanel extends Ref<Project> implements Disposable
+@Singleton
+public class RestClientPanel implements Disposable
 {
 	private static final String ourToolwindowId = "REST Client";
 
@@ -113,14 +116,16 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 	private final JPanel myRootPanel;
 
 	private final TextFieldWithAutoCompletionWithEnter myUrlTextField;
-	private final JComboBox<Protocol> myHttpVersionBox;
 
 	private RestRequestOrResponsePanel myRequestPanel;
 	private RestRequestOrResponsePanel myResponsePanel;
 
+	private final Project myProject;
+
+	@Inject
 	public RestClientPanel(@Nonnull final Project project)
 	{
-		super(project);
+		myProject = project;
 
 		myRootPanel = new JPanel();
 		myRootPanel.setLayout(new BorderLayout(0, 0));
@@ -134,7 +139,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		myMethodComboBox = new JComboBox<>();
 		panel2.add(myMethodComboBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints
 				.SIZEPOLICY_FIXED, null, null, null, 0, false));
-		myUrlTextField = new TextFieldWithAutoCompletionWithEnter(get(), new TextFieldWithAutoCompletion.StringsCompletionProvider(null, null)
+		myUrlTextField = new TextFieldWithAutoCompletionWithEnter(myProject, new TextFieldWithAutoCompletion.StringsCompletionProvider(null, null)
 		{
 			@Nonnull
 			@Override
@@ -146,7 +151,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				}
 
 				List<String> list = new ArrayList<>();
-				for(RequestBean o : RestClientHistoryManager.getInstance(get()).getRequests().values())
+				for(RequestBean o : RestClientHistoryManager.getInstance(myProject).getRequests().values())
 				{
 					list.add(o.getUrl().toString());
 				}
@@ -156,9 +161,6 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		myUrlTextField.setPlaceholder("URL. Hit 'Enter' for execute");
 		panel2.add(myUrlTextField, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints
 				.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-		myHttpVersionBox = new JComboBox<>();
-		panel2.add(myHttpVersionBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints
-				.SIZEPOLICY_FIXED, null, null, null, 0, false));
 
 		final TabbedPaneWrapper tabbedPaneWrapper = new TabbedPaneWrapper(this);
 		panel1.add(tabbedPaneWrapper.getComponent(), BorderLayout.CENTER);
@@ -188,28 +190,6 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			myMethodComboBox.addItem(httpMethod);
 		}
 
-		myHttpVersionBox.setRenderer(new ColoredListCellRenderer<Protocol>()
-		{
-			@Override
-			protected void customizeCellRenderer(@Nonnull JList list, Protocol value, int index, boolean selected, boolean hasFocus)
-			{
-				if(index == -1)
-				{
-					append("Protocol: ", SimpleTextAttributes.GRAY_ATTRIBUTES);
-				}
-				append(value.toString());
-			}
-		});
-
-		for(Protocol httpVersion : Protocol.values())
-		{
-			if(httpVersion == Protocol.HTTP_1_0)
-			{
-				continue;
-			}
-			myHttpVersionBox.addItem(httpVersion);
-		}
-
 		myUrlTextField.addDocumentListener(new DocumentAdapter()
 		{
 			@Override
@@ -237,7 +217,18 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				{
 					return;
 				}
-				Request.Builder builder = new Request.Builder();
+
+				String methodType = (String) myMethodComboBox.getSelectedItem();
+				SimpleHttpRequest httpRequest;
+				try
+				{
+					httpRequest = new SimpleHttpRequest(methodType, request.getUrl().toURI());
+				}
+				catch(URISyntaxException e)
+				{
+					return;
+				}
+
 				String contentType = null;
 				for(HttpHeader httpHeader : myRequestPanel.getHeaders())
 				{
@@ -251,73 +242,77 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 					{
 						continue;
 					}
-					builder = builder.addHeader(name, value);
+					httpRequest.setHeader(name, value);
 				}
-				builder = builder.header("User-Agent", ApplicationInfo.getInstance().getVersionName());
 
-				String methodType = (String) myMethodComboBox.getSelectedItem();
 				switch(methodType)
 				{
 					case "GET":
 					case "HEAD":
 					case "DELETE":
-						builder = builder.method(methodType, null);
 						break;
 					case "PUT":
 					case "POST":
 					case "PATCH":
 					case "TAG":
 						String text = myRequestPanel.getText();
-						RequestBody body = RequestBody.create(contentType == null ? null : MediaType.parse(contentType), text);
-						builder = builder.method(methodType, body);
+						ContentType c = contentType == null ? null : ContentType.parse(contentType);
+
+						if(text != null)
+						{
+							httpRequest.setBodyText(text, c);
+						}
 						break;
 				}
 
-				builder = builder.url(request.getUrl());
+				httpRequest.setHeader("User-Agent", ApplicationInfo.getInstance().getVersionName());
 
-				Request build = builder.build();
+				HttpAsyncClientBuilder httpClientBuilder = HttpAsyncClients.custom();
+				RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+				requestConfigBuilder.setConnectTimeout(1, TimeUnit.HOURS);
+				requestConfigBuilder.setResponseTimeout(1, TimeUnit.HOURS);
+				requestConfigBuilder.setConnectionRequestTimeout(1, TimeUnit.HOURS);
 
-				OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
-				Set<Protocol> protocols = new ArrayListSet<>();
-				protocols.add(request.getHttpVersion());
-				protocols.add(Protocol.HTTP_1_1);
+				httpClientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
 
-				clientBuilder.protocols(new ArrayList<>(protocols));
-				clientBuilder.connectTimeout(1, TimeUnit.HOURS);
-				clientBuilder.readTimeout(1, TimeUnit.HOURS);
-				clientBuilder.writeTimeout(1, TimeUnit.HOURS);
-
-				OkHttpClient client = clientBuilder.build();
-				Call call = client.newCall(build);
-
-				ScheduledFuture<?> cancelCheckFuture = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() ->
-				{
-					try
-					{
-						progressIndicator.checkCanceled();
-					}
-					catch(ProcessCanceledException e)
-					{
-						call.cancel();
-					}
-				}, 1, 1, TimeUnit.SECONDS);
+				Future<?> cancelFuture = CompletableFuture.completedFuture(null);
+				Future<SimpleHttpResponse> callFuture = CompletableFuture.completedFuture(null);
 
 				long time = System.currentTimeMillis();
-				try (Response response = call.execute())
+				try (CloseableHttpAsyncClient httpClient = httpClientBuilder.build())
 				{
-					showBallon("successed", time, response.code(), response.message(), MessageType.INFO);
+					httpClient.start();
 
-					cancelCheckFuture.cancel(false);
+					callFuture = httpClient.execute(httpRequest, null);
 
-					ApplicationManager.getApplication().invokeLater(() ->
+					final Future<SimpleHttpResponse> finalCallFuture = callFuture;
+					cancelFuture = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(() ->
 					{
-						myResponsePanel.setStatusLabel(String.valueOf(response.code()) + " " + response.message());
+						try
+						{
+							progressIndicator.checkCanceled();
+						}
+						catch(ProcessCanceledException e)
+						{
+							finalCallFuture.cancel(true);
+						}
+					}, 1, 1, TimeUnit.SECONDS);
+
+					SimpleHttpResponse response = callFuture.get(1, TimeUnit.HOURS);
+
+					showBallon("successed", time, response.getCode(), response.getReasonPhrase(), MessageType.INFO);
+
+					cancelFuture.cancel(false);
+
+					Application.get().invokeLater(() ->
+					{
+						myResponsePanel.setStatusLabel(String.valueOf(response.getCode()) + " " + response.getReasonPhrase());
 
 						List<HttpHeader> headersAsList = new ArrayList<>();
-						Headers headers = response.headers();
-						for(String headerName : headers.names())
+						Header[] headers = response.getHeaders();
+						for(Header header : headers)
 						{
-							headersAsList.add(new HttpHeader(headerName, StringUtil.join(headers.values(headerName), ";")));
+							headersAsList.add(new HttpHeader(header.getName(), header.getValue()));
 						}
 
 						myResponsePanel.setHeaders(headersAsList);
@@ -330,13 +325,13 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 						{
 							FileType fileType = null;
 
-							ResponseBody body = response.body();
+							SimpleBody body = response.getBody();
 							if(body != null)
 							{
-								MediaType contentType = body.contentType();
+								ContentType contentType = body.getContentType();
 								if(contentType != null)
 								{
-									String mime = contentType.type() + "/" + contentType.subtype();
+									String mime = contentType.getMimeType();
 									Collection<Language> languages = Language.findInstancesByMimeType(mime);
 									if(!languages.isEmpty())
 									{
@@ -355,7 +350,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 									fileType = PlainTextFileType.INSTANCE;
 								}
 
-								myResponsePanel.setText(fileType, body.string());
+								myResponsePanel.setText(fileType, body.getBodyText());
 
 								RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
 
@@ -366,15 +361,15 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 				}
 				catch(Throwable e)
 				{
-					cancelCheckFuture.cancel(false);
+					cancelFuture.cancel(false);
 
-					if(!call.isCanceled())
+					if(e instanceof CancellationException)
 					{
-						showBallon("timeouted", time, -1, null, MessageType.ERROR);
+						showBallon("canceled", time, -1, null, MessageType.WARNING);
 					}
 					else
 					{
-						showBallon("canceled", time, -1, null, MessageType.WARNING);
+						showBallon("timeouted", time, -1, null, MessageType.ERROR);
 					}
 				}
 			}
@@ -397,7 +392,7 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 			{
 				body += ". Status " + code + " " + message;
 			}
-			ToolWindowManager.getInstance(get()).notifyByBalloon(ourToolwindowId, type, body);
+			ToolWindowManager.getInstance(myProject).notifyByBalloon(ourToolwindowId, type, body);
 		});
 	}
 
@@ -420,13 +415,11 @@ public class RestClientPanel extends Ref<Project> implements Disposable
 		}
 		request.setUrl(url);
 		request.setMethod((String) myMethodComboBox.getSelectedItem());
-		request.setHttpVersion((Protocol) myHttpVersionBox.getSelectedItem());
 		return request;
 	}
 
 	public void setRequestBean(RequestBean requestBean)
 	{
-		myHttpVersionBox.setSelectedItem(requestBean.getHttpVersion());
 		myMethodComboBox.setSelectedItem(requestBean.getMethod());
 		URL url = requestBean.getUrl();
 		myUrlTextField.setText(url == null ? "" : url.toString());
