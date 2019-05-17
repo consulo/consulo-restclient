@@ -16,51 +16,13 @@
 
 package consulo.restclient.ui;
 
-import java.awt.BorderLayout;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.swing.BorderFactory;
-import javax.swing.JComboBox;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-
-import org.apache.hc.client5.http.async.methods.SimpleBody;
-import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
-import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
-import org.apache.hc.client5.http.config.RequestConfig;
-import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
-import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
-import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.Header;
-import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.hint.HintUtil;
 import com.intellij.lang.Language;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.actionSystem.ActionGroup;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.ActionPlaces;
-import com.intellij.openapi.actionSystem.ActionToolbar;
-import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.Application;
 import com.intellij.openapi.application.ApplicationInfo;
-import com.intellij.openapi.application.Result;
 import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.editor.event.DocumentAdapter;
@@ -87,6 +49,34 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
+import org.apache.hc.client5.http.async.methods.SimpleBody;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.wiztools.restclient.bean.RequestBean;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.swing.*;
+import java.awt.*;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author VISTALL
@@ -318,46 +308,42 @@ public class RestClientPanel implements Disposable
 						myResponsePanel.setHeaders(headersAsList);
 					});
 
-					new WriteAction<Object>()
+					WriteAction.run(() ->
 					{
-						@Override
-						protected void run(Result<Object> objectResult) throws Throwable
-						{
-							FileType fileType = null;
+						FileType fileType = null;
 
-							SimpleBody body = response.getBody();
-							if(body != null)
+						SimpleBody body = response.getBody();
+						if(body != null)
+						{
+							ContentType contType = body.getContentType();
+							if(contType != null)
 							{
-								ContentType contentType = body.getContentType();
-								if(contentType != null)
+								String mime = contType.getMimeType();
+								Collection<Language> languages = Language.findInstancesByMimeType(mime);
+								if(!languages.isEmpty())
 								{
-									String mime = contentType.getMimeType();
-									Collection<Language> languages = Language.findInstancesByMimeType(mime);
-									if(!languages.isEmpty())
+									for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
 									{
-										for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
+										if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
 										{
-											if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
-											{
-												fileType = type;
-											}
+											fileType = type;
 										}
 									}
 								}
-
-								if(fileType == null)
-								{
-									fileType = PlainTextFileType.INSTANCE;
-								}
-
-								myResponsePanel.setText(fileType, body.getBodyText());
-
-								RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
-
-								SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
 							}
+
+							if(fileType == null)
+							{
+								fileType = PlainTextFileType.INSTANCE;
+							}
+
+							myResponsePanel.setText(fileType, body.getBodyText());
+
+							RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
+
+							SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
 						}
-					}.execute();
+					});
 				}
 				catch(Throwable e)
 				{
