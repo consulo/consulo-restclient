@@ -49,6 +49,7 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
+import consulo.ui.RequiredUIAccess;
 import org.apache.hc.client5.http.async.methods.SimpleBody;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
@@ -199,6 +200,9 @@ public class RestClientPanel implements Disposable
 
 		myUrlTextField.setEnterAction(() -> new Task.Backgroundable(project, "Executing request to: " + myUrlTextField.getText(), true)
 		{
+			private SimpleBody myBody;
+			private RequestBean myRequestBean;
+
 			@Override
 			public void run(@Nonnull ProgressIndicator progressIndicator)
 			{
@@ -207,6 +211,7 @@ public class RestClientPanel implements Disposable
 				{
 					return;
 				}
+				myRequestBean = request;
 
 				String methodType = (String) myMethodComboBox.getSelectedItem();
 				SimpleHttpRequest httpRequest;
@@ -308,45 +313,11 @@ public class RestClientPanel implements Disposable
 						myResponsePanel.setHeaders(headersAsList);
 					});
 
-					WriteAction.run(() ->
-					{
-						FileType fileType = null;
-
-						SimpleBody body = response.getBody();
-						if(body != null)
-						{
-							ContentType contType = body.getContentType();
-							if(contType != null)
-							{
-								String mime = contType.getMimeType();
-								Collection<Language> languages = Language.findInstancesByMimeType(mime);
-								if(!languages.isEmpty())
-								{
-									for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
-									{
-										if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
-										{
-											fileType = type;
-										}
-									}
-								}
-							}
-
-							if(fileType == null)
-							{
-								fileType = PlainTextFileType.INSTANCE;
-							}
-
-							myResponsePanel.setText(fileType, body.getBodyText());
-
-							RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, request);
-
-							SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
-						}
-					});
+					myBody = response.getBody();
 				}
 				catch(Throwable e)
 				{
+					e.printStackTrace();
 					cancelFuture.cancel(false);
 
 					if(e instanceof CancellationException)
@@ -358,6 +329,49 @@ public class RestClientPanel implements Disposable
 						showBallon("timeouted", time, -1, null, MessageType.ERROR);
 					}
 				}
+			}
+
+			@RequiredUIAccess
+			@Override
+			public void onSuccess()
+			{
+				if(myBody == null)
+				{
+					return;
+				}
+
+				WriteAction.run(() ->
+				{
+					FileType fileType = null;
+
+					ContentType contType = myBody.getContentType();
+					if(contType != null)
+					{
+						String mime = contType.getMimeType();
+						Collection<Language> languages = Language.findInstancesByMimeType(mime);
+						if(!languages.isEmpty())
+						{
+							for(FileType type : FileTypeRegistry.getInstance().getRegisteredFileTypes())
+							{
+								if(type instanceof LanguageFileType && languages.contains(((LanguageFileType) type).getLanguage()))
+								{
+									fileType = type;
+								}
+							}
+						}
+					}
+
+					if(fileType == null)
+					{
+						fileType = PlainTextFileType.INSTANCE;
+					}
+
+					myResponsePanel.setText(fileType, myBody.getBodyText());
+
+					RestClientHistoryManager.getInstance(project).getRequests().put(RestClientHistoryManager.LAST, myRequestBean);
+
+					SwingUtilities.invokeLater(() -> tabbedPaneWrapper.setSelectedComponent(myResponsePanel));
+				});
 			}
 		}.queue());
 
