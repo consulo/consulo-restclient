@@ -1,4 +1,4 @@
-<idea-plugin>
+<consulo-plugin>
 	<id>consulo.restclient</id>
 	<name>REST Client</name>
 	<version>SNAPSHOT</version>
@@ -44,4 +44,4 @@
 		<projectService serviceInterface="consulo.restclient.ui.RestClientPanel"
 						serviceImplementation="consulo.restclient.ui.RestClientPanel"/>
 	</extensions>
-</idea-plugin>
+</consulo-plugin>

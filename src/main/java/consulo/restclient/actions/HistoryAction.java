@@ -16,15 +16,6 @@
 
 package consulo.restclient.actions;
 
-import java.awt.event.MouseEvent;
-import java.util.Map;
-
-import javax.annotation.Nonnull;
-import javax.swing.SwingUtilities;
-
-import consulo.restclient.RestClientHistoryManager;
-import consulo.restclient.ui.RestClientPanel;
-import org.wiztools.restclient.bean.RequestBean;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DataContext;
@@ -33,7 +24,15 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
 import com.intellij.ui.awt.RelativePoint;
-import consulo.annotations.RequiredDispatchThread;
+import consulo.restclient.RestClientHistoryManager;
+import consulo.restclient.ui.RestClientPanel;
+import consulo.ui.annotation.RequiredUIAccess;
+import org.wiztools.restclient.bean.RequestBean;
+
+import javax.annotation.Nonnull;
+import javax.swing.*;
+import java.awt.event.MouseEvent;
+import java.util.Map;
 
 /**
  * @author VISTALL
@@ -41,7 +40,7 @@ import consulo.annotations.RequiredDispatchThread;
  */
 public class HistoryAction extends AnAction
 {
-	@RequiredDispatchThread
+	@RequiredUIAccess
 	@Override
 	public void actionPerformed(@Nonnull AnActionEvent e)
 	{
@@ -62,7 +61,7 @@ public class HistoryAction extends AnAction
 
 			AnAction anAction = new AnAction(entry.getKey())
 			{
-				@RequiredDispatchThread
+				@RequiredUIAccess
 				@Override
 				public void actionPerformed(@Nonnull AnActionEvent anActionEvent)
 				{
@@ -84,7 +83,7 @@ public class HistoryAction extends AnAction
 		{
 			AnAction anAction = new AnAction(RestClientHistoryManager.LAST)
 			{
-				@RequiredDispatchThread
+				@RequiredUIAccess
 				@Override
 				public void actionPerformed(@Nonnull AnActionEvent anActionEvent)
 				{
