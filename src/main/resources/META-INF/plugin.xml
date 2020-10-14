@@ -7,34 +7,34 @@
 	<actions>
 		<group id="RESTClientToolbarActions">
 			<action id="RESTClientToolbarActions.History"
-					icon="AllIcons.General.MessageHistory"
+					icon="consulo.platform.base.PlatformIconGroup@general.messagehistory"
 					text="History"
 					class="consulo.restclient.actions.HistoryAction"/>
 
 			<action id="RESTClientToolbarActions.Save"
-					icon="AllIcons.Actions.Menu_saveall"
+					icon="consulo.platform.base.PlatformIconGroup@actions.menu_saveall"
 					text="Save"
 					class="consulo.restclient.actions.SaveAction"/>
 
 			<action id="RESTClientToolbarActions.Clean"
-					icon="AllIcons.Actions.Unselectall"
+					icon="consulo.platform.base.PlatformIconGroup@actions.unselectall"
 					text="Clean"
 					class="consulo.restclient.actions.CleanAction"/>
 
 			<action id="RESTClientToolbarActions.Export"
-					icon="AllIcons.ToolbarDecorator.Export"
+					icon="consulo.platform.base.PlatformIconGroup@toolbarDecorator.export"
 					text="Export"
 					class="consulo.restclient.actions.ExportRequestAction"/>
 
 			<action id="RESTClientToolbarActions.Import"
-					icon="AllIcons.ToolbarDecorator.Import"
+					icon="consulo.platform.base.PlatformIconGroup@toolbarDecorator.import"
 					text="Import"
 					class="consulo.restclient.actions.ImportRequestAction"/>
 		</group>
 	</actions>
 
 	<extensions defaultExtensionNs="com.intellij">
-		<toolWindow id="REST Client" icon="/general/web.png" factoryClass="consulo.restclient.ui.RestClientToolWindowFactory"
+		<toolWindow id="REST Client" icon="consulo.platform.base.PlatformIconGroup@general.web" factoryClass="consulo.restclient.ui.RestClientToolWindowFactory"
 					anchor="bottom"
 					canCloseContents="false"/>
 
