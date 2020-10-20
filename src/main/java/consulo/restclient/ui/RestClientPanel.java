@@ -50,6 +50,7 @@ import consulo.disposer.Disposable;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
 import consulo.ui.annotation.RequiredUIAccess;
+import jakarta.inject.Singleton;
 import org.apache.hc.client5.http.async.methods.SimpleBody;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
@@ -63,8 +64,8 @@ import org.wiztools.restclient.bean.RequestBean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+
 import javax.swing.*;
 import java.awt.*;
 import java.net.MalformedURLException;
