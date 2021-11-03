@@ -3,6 +3,9 @@
 	<name>REST Client</name>
 	<version>SNAPSHOT</version>
 	<vendor>consulo.io</vendor>
+	<tags>
+		<tag>web.tools</tag>
+	</tags>
 
 	<actions>
 		<group id="RESTClientToolbarActions">
