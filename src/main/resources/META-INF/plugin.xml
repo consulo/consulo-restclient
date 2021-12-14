@@ -25,12 +25,12 @@
 					class="consulo.restclient.actions.CleanAction"/>
 
 			<action id="RESTClientToolbarActions.Export"
-					icon="consulo.platform.base.PlatformIconGroup@toolbarDecorator.export"
+					icon="consulo.platform.base.PlatformIconGroup@actions.export"
 					text="Export"
 					class="consulo.restclient.actions.ExportRequestAction"/>
 
 			<action id="RESTClientToolbarActions.Import"
-					icon="consulo.platform.base.PlatformIconGroup@toolbarDecorator.import"
+					icon="consulo.platform.base.PlatformIconGroup@actions.import"
 					text="Import"
 					class="consulo.restclient.actions.ImportRequestAction"/>
 		</group>
