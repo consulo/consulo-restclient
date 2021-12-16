@@ -4,7 +4,7 @@
 	<version>SNAPSHOT</version>
 	<vendor>consulo.io</vendor>
 	<tags>
-		<tag>web.tools</tag>
+		<tag>web.tool</tag>
 	</tags>
 
 	<actions>
