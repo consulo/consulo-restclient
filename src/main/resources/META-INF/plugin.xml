@@ -10,7 +10,7 @@
 	<actions>
 		<group id="RESTClientToolbarActions">
 			<action id="RESTClientToolbarActions.History"
-					icon="consulo.platform.base.PlatformIconGroup@general.messagehistory"
+					icon="consulo.platform.base.PlatformIconGroup@vcs.history"
 					text="History"
 					class="consulo.restclient.actions.HistoryAction"/>
 
@@ -20,7 +20,7 @@
 					class="consulo.restclient.actions.SaveAction"/>
 
 			<action id="RESTClientToolbarActions.Clean"
-					icon="consulo.platform.base.PlatformIconGroup@actions.unselectall"
+					icon="consulo.platform.base.PlatformIconGroup@actions.gc"
 					text="Clean"
 					class="consulo.restclient.actions.CleanAction"/>
 
