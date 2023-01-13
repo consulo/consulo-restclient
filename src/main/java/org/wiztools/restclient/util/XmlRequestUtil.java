@@ -1,5 +1,19 @@
 package org.wiztools.restclient.util;
 
+import consulo.logging.Logger;
+import consulo.util.collection.MultiMap;
+import consulo.util.jdom.JDOMUtil;
+import org.jdom.Document;
+import org.jdom.Element;
+import org.jdom.JDOMException;
+import org.wiztools.restclient.XMLException;
+import org.wiztools.restclient.bean.*;
+
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.StartDocument;
+import javax.xml.stream.events.XMLEvent;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,28 +24,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
-
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.StartDocument;
-import javax.xml.stream.events.XMLEvent;
-
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
-import org.wiztools.restclient.XMLException;
-import org.wiztools.restclient.bean.Auth;
-import org.wiztools.restclient.bean.ReqEntity;
-import org.wiztools.restclient.bean.RequestBean;
-import org.wiztools.restclient.bean.Response;
-import org.wiztools.restclient.bean.ResponseBean;
-import org.wiztools.restclient.bean.TestExceptionResult;
-import org.wiztools.restclient.bean.TestResult;
-import org.wiztools.restclient.bean.TestResultBean;
-import com.intellij.openapi.util.JDOMUtil;
-import com.intellij.util.containers.MultiMap;
 
 /**
  *
@@ -40,7 +32,7 @@ import com.intellij.util.containers.MultiMap;
 public final class XmlRequestUtil{
     private XmlRequestUtil() {
     }
-    private static final Logger LOG = Logger.getLogger(XmlRequestUtil.class.getName());
+    private static final Logger LOG = Logger.getInstance(XmlRequestUtil.class);
 
     public static final String XML_MIME = "application/xml";
 
@@ -472,7 +464,7 @@ public final class XmlRequestUtil{
                     reader.close();
                 }
                 catch(XMLStreamException ex){
-                    LOG.warning(ex.getMessage());
+                    LOG.warn(ex.getMessage());
                 }
             }
         }

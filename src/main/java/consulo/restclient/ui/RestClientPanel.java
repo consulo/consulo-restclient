@@ -16,38 +16,39 @@
 
 package consulo.restclient.ui;
 
-import com.intellij.codeInsight.completion.CompletionParameters;
-import com.intellij.codeInsight.hint.HintUtil;
-import com.intellij.lang.Language;
-import com.intellij.openapi.actionSystem.*;
-import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationInfo;
-import com.intellij.openapi.application.WriteAction;
-import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.editor.event.DocumentAdapter;
-import com.intellij.openapi.editor.event.DocumentEvent;
-import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.fileTypes.FileTypeRegistry;
-import com.intellij.openapi.fileTypes.LanguageFileType;
-import com.intellij.openapi.fileTypes.PlainTextFileType;
-import com.intellij.openapi.progress.ProcessCanceledException;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.MessageType;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.openapi.wm.ToolWindowManager;
-import com.intellij.ui.*;
-import com.intellij.ui.components.panels.Wrapper;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.util.concurrency.AppExecutorUtil;
-import com.intellij.util.ui.JBUI;
-import com.intellij.util.ui.UIUtil;
+import consulo.annotation.component.ComponentScope;
+import consulo.annotation.component.ServiceAPI;
+import consulo.annotation.component.ServiceImpl;
+import consulo.application.Application;
+import consulo.application.WriteAction;
+import consulo.application.progress.ProgressIndicator;
+import consulo.application.progress.Task;
+import consulo.application.util.concurrent.AppExecutorUtil;
+import consulo.component.ProcessCanceledException;
 import consulo.disposer.Disposable;
+import consulo.document.event.DocumentAdapter;
+import consulo.document.event.DocumentEvent;
+import consulo.language.Language;
+import consulo.language.editor.completion.CompletionParameters;
+import consulo.language.editor.ui.awt.HintUtil;
+import consulo.language.editor.ui.awt.TextFieldWithAutoCompletion;
+import consulo.language.file.LanguageFileType;
+import consulo.language.plain.PlainTextFileType;
+import consulo.project.Project;
+import consulo.project.ui.wm.ToolWindowManager;
 import consulo.restclient.HttpHeader;
 import consulo.restclient.RestClientHistoryManager;
+import consulo.ui.NotificationType;
 import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.ex.JBColor;
+import consulo.ui.ex.SimpleTextAttributes;
+import consulo.ui.ex.action.*;
+import consulo.ui.ex.awt.*;
+import consulo.util.lang.StringUtil;
+import consulo.virtualFileSystem.fileType.FileType;
+import consulo.virtualFileSystem.fileType.FileTypeRegistry;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.apache.hc.client5.http.async.methods.SimpleBody;
@@ -82,14 +83,16 @@ import java.util.concurrent.TimeUnit;
  * @since 20.11.13.
  */
 @Singleton
+@ServiceAPI(ComponentScope.PROJECT)
+@ServiceImpl
 public class RestClientPanel implements Disposable
 {
-	private static final String ourToolwindowId = "REST Client";
+	public static final String ourToolwindowId = "REST Client";
 
 	@Nonnull
 	public static RestClientPanel getInstance(@Nonnull Project project)
 	{
-		return ServiceManager.getService(project, RestClientPanel.class);
+		return project.getInstance(RestClientPanel.class);
 	}
 
 	private static final String[] ourSupportedMethods = new String[]{
@@ -256,12 +259,12 @@ public class RestClientPanel implements Disposable
 
 						if(text != null)
 						{
-							httpRequest.setBodyText(text, c);
+							httpRequest.setBody(text, c);
 						}
 						break;
 				}
 
-				httpRequest.setHeader("User-Agent", ApplicationInfo.getInstance().getVersionName());
+				httpRequest.setHeader("User-Agent", Application.get().getName().get());
 
 				HttpAsyncClientBuilder httpClientBuilder = HttpAsyncClients.custom();
 				RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
@@ -296,7 +299,7 @@ public class RestClientPanel implements Disposable
 
 					SimpleHttpResponse response = callFuture.get(1, TimeUnit.HOURS);
 
-					showBallon("successed", time, response.getCode(), response.getReasonPhrase(), MessageType.INFO);
+					showBallon("success", time, response.getCode(), response.getReasonPhrase(), NotificationType.INFO);
 
 					cancelFuture.cancel(false);
 
@@ -323,11 +326,11 @@ public class RestClientPanel implements Disposable
 
 					if(e instanceof CancellationException)
 					{
-						showBallon("canceled", time, -1, null, MessageType.WARNING);
+						showBallon("canceled", time, -1, null, NotificationType.WARNING);
 					}
 					else
 					{
-						showBallon("timeouted", time, -1, null, MessageType.ERROR);
+						showBallon("timeouted", time, -1, null, NotificationType.ERROR);
 					}
 				}
 			}
@@ -384,7 +387,7 @@ public class RestClientPanel implements Disposable
 		myRootPanel.add(actionToolbar.getComponent(), BorderLayout.WEST);
 	}
 
-	private void showBallon(String reason, long startTime, int code, String message, MessageType type)
+	private void showBallon(String reason, long startTime, int code, String message, NotificationType type)
 	{
 		long l = System.currentTimeMillis();
 		UIUtil.invokeLaterIfNeeded(() ->

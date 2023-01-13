@@ -16,26 +16,69 @@
 
 package consulo.restclient.ui;
 
+import consulo.annotation.component.ExtensionImpl;
+import consulo.application.dumb.DumbAware;
+import consulo.localize.LocalizeValue;
+import consulo.platform.base.icon.PlatformIconGroup;
+import consulo.project.Project;
+import consulo.project.ui.wm.ToolWindowFactory;
+import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.ex.content.ContentFactory;
+import consulo.ui.ex.toolWindow.ToolWindow;
+import consulo.ui.ex.toolWindow.ToolWindowAnchor;
+import consulo.ui.image.Image;
+
 import javax.annotation.Nonnull;
-import com.intellij.openapi.project.DumbAware;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.ui.content.ContentFactory;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
+@ExtensionImpl
 public class RestClientToolWindowFactory implements ToolWindowFactory, DumbAware
 {
+	@Nonnull
+	@Override
+	public String getId()
+	{
+		return RestClientPanel.ourToolwindowId;
+	}
+
+	@RequiredUIAccess
 	@Override
 	public void createToolWindowContent(@Nonnull Project project, @Nonnull ToolWindow toolWindow)
 	{
-		ContentFactory contentFactory = ContentFactory.getInstance();
+		ContentFactory contentFactory = toolWindow.getContentManager().getFactory();
 
 		RestClientPanel restClientPanel = RestClientPanel.getInstance(project);
 
 		toolWindow.getContentManager().addContent(contentFactory.createContent(restClientPanel.getRootPanel(), "", true));
+	}
+
+	@Nonnull
+	@Override
+	public ToolWindowAnchor getAnchor()
+	{
+		return ToolWindowAnchor.BOTTOM;
+	}
+
+	@Override
+	public boolean canCloseContents()
+	{
+		return false;
+	}
+
+	@Nonnull
+	@Override
+	public Image getIcon()
+	{
+		return PlatformIconGroup.generalWeb();
+	}
+
+	@Nonnull
+	@Override
+	public LocalizeValue getDisplayName()
+	{
+		return LocalizeValue.localizeTODO("REST Client");
 	}
 }

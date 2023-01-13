@@ -16,15 +16,14 @@
 
 package consulo.restclient.ui;
 
-import java.awt.event.KeyEvent;
+import consulo.language.editor.ui.awt.TextFieldWithAutoCompletion;
+import consulo.language.editor.ui.awt.TextFieldWithAutoCompletionListProvider;
+import consulo.project.Project;
 
 import javax.annotation.Nonnull;
-import javax.swing.KeyStroke;
-
 import javax.annotation.Nullable;
-import com.intellij.openapi.project.Project;
-import com.intellij.ui.TextFieldWithAutoCompletion;
-import com.intellij.ui.TextFieldWithAutoCompletionListProvider;
+import javax.swing.*;
+import java.awt.event.KeyEvent;
 
 /**
  * @author VISTALL
@@ -34,8 +33,7 @@ public class TextFieldWithAutoCompletionWithEnter extends TextFieldWithAutoCompl
 {
 	private Runnable myEnterAction;
 
-	public TextFieldWithAutoCompletionWithEnter(Project project, @Nonnull TextFieldWithAutoCompletionListProvider<String> provider,
-			boolean showAutocompletionIsAvailableHint, @Nullable String text)
+	public TextFieldWithAutoCompletionWithEnter(Project project, @Nonnull TextFieldWithAutoCompletionListProvider<String> provider, boolean showAutocompletionIsAvailableHint, @Nullable String text)
 	{
 		super(project, provider, showAutocompletionIsAvailableHint, text);
 	}

@@ -16,17 +16,38 @@
 
 package consulo.restclient.actions;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
+import consulo.annotation.component.ActionImpl;
+import consulo.platform.base.icon.PlatformIconGroup;
+import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.ex.action.AnAction;
+import consulo.ui.ex.action.AnActionEvent;
+import consulo.ui.image.Image;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
+@ActionImpl(id = "RESTClientToolbarActions.Import")
 public class ImportRequestAction extends AnAction
 {
+	public ImportRequestAction()
+	{
+		super("Import");
+	}
+
+	@Nullable
 	@Override
-	public void actionPerformed(AnActionEvent anActionEvent)
+	protected Image getTemplateIcon()
+	{
+		return PlatformIconGroup.actionsImport();
+	}
+
+	@RequiredUIAccess
+	@Override
+	public void actionPerformed(@Nonnull AnActionEvent e)
 	{
 
 	}

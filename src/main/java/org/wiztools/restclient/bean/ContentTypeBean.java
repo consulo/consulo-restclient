@@ -1,9 +1,9 @@
 package org.wiztools.restclient.bean;
 
-import java.nio.charset.Charset;
-
+import consulo.util.lang.StringUtil;
 import org.wiztools.restclient.util.HttpUtil;
-import com.intellij.openapi.util.text.StringUtil;
+
+import java.nio.charset.Charset;
 
 /**
  *

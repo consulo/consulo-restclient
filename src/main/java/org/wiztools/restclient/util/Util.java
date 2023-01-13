@@ -1,14 +1,17 @@
 package org.wiztools.restclient.util;
 
+import consulo.util.collection.MultiMap;
+import org.wiztools.restclient.Base64Exception;
+import org.wiztools.restclient.XMLException;
+import org.wiztools.restclient.bean.ReqResBean;
+import org.wiztools.restclient.bean.RequestBean;
+import org.wiztools.restclient.bean.Response;
+
 import java.io.*;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.MalformedInputException;
-import java.nio.charset.UnmappableCharacterException;
+import java.nio.charset.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -16,14 +19,6 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
-import org.wiztools.restclient.Base64Exception;
-import org.wiztools.restclient.XMLException;
-import org.wiztools.restclient.bean.ReqResBean;
-import org.wiztools.restclient.bean.RequestBean;
-import org.wiztools.restclient.bean.Response;
-import com.google.common.base.Charsets;
-import com.intellij.util.containers.MultiMap;
 
 /**
  * @author schandran
@@ -37,7 +32,7 @@ public final class Util
 
 	public static String base64encode(String inStr)
 	{
-		return base64encode(inStr.getBytes(Charsets.UTF_8));
+		return base64encode(inStr.getBytes(StandardCharsets.UTF_8));
 	}
 
 	public static String base64encode(byte[] arr)
@@ -55,7 +50,7 @@ public final class Util
 	public static String base64decode(String base64Str) throws Base64Exception
 	{
 		byte[] out = base64decodeByteArray(base64Str);
-		CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
+		CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
 		try
 		{
 			decoder.onMalformedInput(CodingErrorAction.REPORT);

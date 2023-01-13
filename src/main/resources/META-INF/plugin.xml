@@ -6,45 +6,4 @@
 	<tags>
 		<tag>web.tool</tag>
 	</tags>
-
-	<actions>
-		<group id="RESTClientToolbarActions">
-			<action id="RESTClientToolbarActions.History"
-					icon="consulo.platform.base.PlatformIconGroup@vcs.history"
-					text="History"
-					class="consulo.restclient.actions.HistoryAction"/>
-
-			<action id="RESTClientToolbarActions.Save"
-					icon="consulo.platform.base.PlatformIconGroup@actions.menu_saveall"
-					text="Save"
-					class="consulo.restclient.actions.SaveAction"/>
-
-			<action id="RESTClientToolbarActions.Clean"
-					icon="consulo.platform.base.PlatformIconGroup@actions.gc"
-					text="Clean"
-					class="consulo.restclient.actions.CleanAction"/>
-
-			<action id="RESTClientToolbarActions.Export"
-					icon="consulo.platform.base.PlatformIconGroup@actions.export"
-					text="Export"
-					class="consulo.restclient.actions.ExportRequestAction"/>
-
-			<action id="RESTClientToolbarActions.Import"
-					icon="consulo.platform.base.PlatformIconGroup@actions.import"
-					text="Import"
-					class="consulo.restclient.actions.ImportRequestAction"/>
-		</group>
-	</actions>
-
-	<extensions defaultExtensionNs="com.intellij">
-		<toolWindow id="REST Client" icon="consulo.platform.base.PlatformIconGroup@general.web" factoryClass="consulo.restclient.ui.RestClientToolWindowFactory"
-					anchor="bottom"
-					canCloseContents="false"/>
-
-		<projectService serviceInterface="consulo.restclient.RestClientHistoryManager"
-						serviceImplementation="consulo.restclient.RestClientHistoryManager"/>
-
-		<projectService serviceInterface="consulo.restclient.ui.RestClientPanel"
-						serviceImplementation="consulo.restclient.ui.RestClientPanel"/>
-	</extensions>
 </consulo-plugin>

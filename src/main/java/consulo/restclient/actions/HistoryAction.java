@@ -16,20 +16,24 @@
 
 package consulo.restclient.actions;
 
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
-import com.intellij.openapi.ui.popup.ListPopup;
-import com.intellij.ui.awt.RelativePoint;
+import consulo.annotation.component.ActionImpl;
+import consulo.dataContext.DataContext;
+import consulo.platform.base.icon.PlatformIconGroup;
+import consulo.project.Project;
 import consulo.restclient.RestClientHistoryManager;
 import consulo.restclient.ui.RestClientPanel;
 import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.ex.RelativePoint;
+import consulo.ui.ex.action.AnAction;
+import consulo.ui.ex.action.AnActionEvent;
+import consulo.ui.ex.action.DefaultActionGroup;
+import consulo.ui.ex.popup.JBPopupFactory;
+import consulo.ui.ex.popup.ListPopup;
+import consulo.ui.image.Image;
 import org.wiztools.restclient.bean.RequestBean;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.util.Map;
@@ -38,21 +42,38 @@ import java.util.Map;
  * @author VISTALL
  * @since 20.11.13.
  */
+@ActionImpl(id = "RESTClientToolbarActions.History")
 public class HistoryAction extends AnAction
 {
+	public HistoryAction()
+	{
+		super("History");
+	}
+
+	@Nullable
+	@Override
+	protected Image getTemplateIcon()
+	{
+		return PlatformIconGroup.vcsHistory();
+	}
+
 	@RequiredUIAccess
 	@Override
 	public void actionPerformed(@Nonnull AnActionEvent e)
 	{
-		final Project project = e.getProject();
+		final Project project = e.getData(Project.KEY);
+		if(project == null)
+		{
+			return;
+		}
 
 		DefaultActionGroup actionGroup = new DefaultActionGroup();
 
-		RestClientHistoryManager clientHistoryManager = RestClientHistoryManager.getInstance(e.getProject());
+		RestClientHistoryManager clientHistoryManager = RestClientHistoryManager.getInstance(project);
 
 		final RequestBean requestBean = clientHistoryManager.getRequests().get(RestClientHistoryManager.LAST);
 
-		for(final Map.Entry<String, RequestBean> entry : RestClientHistoryManager.getInstance(e.getProject()).getRequests().entrySet())
+		for(final Map.Entry<String, RequestBean> entry : RestClientHistoryManager.getInstance(project).getRequests().entrySet())
 		{
 			if(entry.getValue() == requestBean)
 			{

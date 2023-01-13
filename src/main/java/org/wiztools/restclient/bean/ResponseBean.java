@@ -1,10 +1,10 @@
 package org.wiztools.restclient.bean;
 
-import java.util.Arrays;
-
+import consulo.util.collection.MultiMap;
 import org.wiztools.restclient.util.HttpUtil;
 import org.wiztools.restclient.util.Util;
-import com.intellij.util.containers.MultiMap;
+
+import java.util.Arrays;
 
 /**
  *

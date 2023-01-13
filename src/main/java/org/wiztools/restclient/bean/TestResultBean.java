@@ -1,16 +1,12 @@
 package org.wiztools.restclient.bean;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  *
  * @author subwiz
  */
 public class TestResultBean implements TestResult {
-
-    private static final Logger LOG = Logger.getLogger(TestResultBean.class.getName());
-
     private int runCount;
     private int failureCount;
     private int errorCount;

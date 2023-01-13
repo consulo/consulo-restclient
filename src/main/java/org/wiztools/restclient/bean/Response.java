@@ -1,8 +1,8 @@
 package org.wiztools.restclient.bean;
 
-import java.io.Serializable;
+import consulo.util.collection.MultiMap;
 
-import com.intellij.util.containers.MultiMap;
+import java.io.Serializable;
 
 /**
  *
@@ -12,7 +12,7 @@ public interface Response extends Cloneable, Serializable {
 
     long getExecutionTime();
 
-	MultiMap<String, String> getHeaders();
+    MultiMap<String, String> getHeaders();
     
     ContentType getContentType();
 

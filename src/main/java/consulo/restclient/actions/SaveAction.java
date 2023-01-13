@@ -16,24 +16,47 @@
 
 package consulo.restclient.actions;
 
+import consulo.annotation.component.ActionImpl;
+import consulo.platform.base.icon.PlatformIconGroup;
+import consulo.project.Project;
 import consulo.restclient.RestClientHistoryManager;
 import consulo.restclient.ui.RestClientPanel;
+import consulo.ui.ex.action.AnAction;
+import consulo.ui.ex.action.AnActionEvent;
+import consulo.ui.ex.awt.Messages;
+import consulo.ui.image.Image;
 import org.wiztools.restclient.bean.RequestBean;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
+
+import javax.annotation.Nullable;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
+@ActionImpl(id = "RESTClientToolbarActions.Save")
 public class SaveAction extends AnAction
 {
+	public SaveAction()
+	{
+		super("Save");
+	}
+
+	@Nullable
+	@Override
+	protected Image getTemplateIcon()
+	{
+		return PlatformIconGroup.actionsMenu_saveall();
+	}
+
 	@Override
 	public void actionPerformed(AnActionEvent e)
 	{
-		Project project = e.getProject();
+		Project project = e.getData(Project.KEY);
+		if(project == null)
+		{
+			return;
+		}
+
 		RequestBean requestBean = RestClientPanel.getInstance(project).getRequestBean();
 		if(requestBean == null)
 		{
@@ -51,7 +74,7 @@ public class SaveAction extends AnAction
 	public void update(AnActionEvent e)
 	{
 		super.update(e);
-		Project project = e.getProject();
+		Project project = e.getData(Project.KEY);
 		if(project == null)
 		{
 			return;

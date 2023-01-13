@@ -16,22 +16,46 @@
 
 package consulo.restclient.actions;
 
-import javax.swing.SwingUtilities;
-
+import consulo.annotation.component.ActionImpl;
+import consulo.platform.base.icon.PlatformIconGroup;
+import consulo.project.Project;
 import consulo.restclient.ui.RestClientPanel;
+import consulo.ui.ex.action.AnAction;
+import consulo.ui.ex.action.AnActionEvent;
+import consulo.ui.image.Image;
 import org.wiztools.restclient.bean.RequestBean;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
+
+import javax.annotation.Nullable;
+import javax.swing.*;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
+@ActionImpl(id = "RESTClientToolbarActions.Clean")
 public class CleanAction extends AnAction
 {
+	public CleanAction()
+	{
+		super("Clean");
+	}
+
+	@Nullable
+	@Override
+	protected Image getTemplateIcon()
+	{
+		return PlatformIconGroup.actionsGc();
+	}
+
 	@Override
 	public void actionPerformed(final AnActionEvent e)
 	{
+		Project project = e.getData(Project.KEY);
+		if(project == null)
+		{
+			return;
+		}
+
 		SwingUtilities.invokeLater(new Runnable()
 		{
 			@Override
@@ -39,7 +63,7 @@ public class CleanAction extends AnAction
 			{
 				RequestBean requestBean = new RequestBean();
 
-				RestClientPanel.getInstance(e.getProject()).setRequestBean(requestBean);
+				RestClientPanel.getInstance(project).setRequestBean(requestBean);
 			}
 		});
 	}

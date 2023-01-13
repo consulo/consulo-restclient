@@ -16,33 +16,23 @@
 
 package consulo.restclient.ui;
 
-import java.awt.BorderLayout;
-import java.util.List;
+import consulo.codeEditor.EditorEx;
+import consulo.codeEditor.EditorFactory;
+import consulo.document.Document;
+import consulo.language.editor.ui.awt.EditorTextField;
+import consulo.language.plain.PlainTextFileType;
+import consulo.project.Project;
+import consulo.restclient.HttpHeader;
+import consulo.ui.ex.awt.*;
+import consulo.ui.ex.awt.table.ListTableModel;
+import consulo.ui.ex.awt.table.TableView;
+import consulo.virtualFileSystem.fileType.FileType;
 
 import javax.annotation.Nonnull;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.ScrollPaneConstants;
-
 import javax.annotation.Nullable;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.ex.EditorEx;
-import com.intellij.openapi.editor.impl.EditorFactoryImpl;
-import com.intellij.openapi.fileTypes.FileType;
-import com.intellij.openapi.fileTypes.PlainTextFileType;
-import com.intellij.openapi.project.Project;
-import com.intellij.ui.EditorTextField;
-import com.intellij.ui.OnePixelSplitter;
-import com.intellij.ui.ScrollPaneFactory;
-import com.intellij.ui.SideBorder;
-import com.intellij.ui.ToolbarDecorator;
-import com.intellij.ui.table.TableView;
-import com.intellij.util.ui.ColumnInfo;
-import com.intellij.util.ui.ElementProducer;
-import com.intellij.util.ui.ListTableModel;
-import consulo.restclient.HttpHeader;
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
 
 /**
  * @author VISTALL
@@ -182,8 +172,8 @@ public class RestRequestOrResponsePanel extends JPanel
 
 	public void setText(FileType fileType, String body)
 	{
-		EditorFactoryImpl editorFactory = (EditorFactoryImpl) EditorFactory.getInstance();
-		Document document = editorFactory.createDocument(body, true, true);
+		EditorFactory editorFactory = EditorFactory.getInstance();
+		Document document = editorFactory.createDocument(body);
 
 		myEditorTextField.setNewDocumentAndFileType(fileType, document);
 	}

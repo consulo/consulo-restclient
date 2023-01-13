@@ -16,34 +16,41 @@
 
 package consulo.restclient;
 
+import consulo.annotation.component.ComponentScope;
+import consulo.annotation.component.ServiceAPI;
+import consulo.annotation.component.ServiceImpl;
+import consulo.component.persist.PersistentStateComponent;
+import consulo.component.persist.State;
+import consulo.component.persist.Storage;
+import consulo.component.persist.StoragePathMacros;
+import consulo.logging.Logger;
+import consulo.project.Project;
+import jakarta.inject.Singleton;
+import org.jdom.Element;
+import org.wiztools.restclient.bean.RequestBean;
+import org.wiztools.restclient.util.XmlRequestUtil;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.jdom.Element;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import org.wiztools.restclient.bean.RequestBean;
-import org.wiztools.restclient.util.XmlRequestUtil;
-import com.intellij.openapi.components.PersistentStateComponent;
-import com.intellij.openapi.components.ServiceManager;
-import com.intellij.openapi.components.State;
-import com.intellij.openapi.components.Storage;
-import com.intellij.openapi.components.StoragePathMacros;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.Project;
 
 /**
  * @author VISTALL
  * @since 20.11.13.
  */
 @State(
-		name="RestClientHistoryManager",
-		storages= {
+		name = "RestClientHistoryManager",
+		storages = {
 				@Storage(
 						file = StoragePathMacros.WORKSPACE_FILE
-				)}
+				)
+		}
 )
+@ServiceAPI(ComponentScope.PROJECT)
+@ServiceImpl
+@Singleton
 public class RestClientHistoryManager implements PersistentStateComponent<Element>
 {
 	private static final Logger LOGGER = Logger.getInstance(RestClientHistoryManager.class);
@@ -51,7 +58,7 @@ public class RestClientHistoryManager implements PersistentStateComponent<Elemen
 	@Nonnull
 	public static RestClientHistoryManager getInstance(@Nonnull Project project)
 	{
-		return ServiceManager.getService(project, RestClientHistoryManager.class);
+		return project.getInstance(RestClientHistoryManager.class);
 	}
 
 	public static final String LAST = "~ Last";
@@ -96,7 +103,7 @@ public class RestClientHistoryManager implements PersistentStateComponent<Elemen
 			}
 			catch(MalformedURLException e)
 			{
-				RestClientHistoryManager.LOGGER.error(e);
+				LOGGER.error(e);
 			}
 		}
 	}

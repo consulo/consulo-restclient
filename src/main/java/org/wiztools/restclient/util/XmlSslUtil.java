@@ -1,13 +1,13 @@
 package org.wiztools.restclient.util;
 
-import java.util.List;
-
+import consulo.util.lang.StringUtil;
 import org.jdom.Attribute;
 import org.jdom.Element;
 import org.wiztools.restclient.bean.SSLHostnameVerifier;
 import org.wiztools.restclient.bean.SSLReq;
 import org.wiztools.restclient.bean.SSLReqBean;
-import com.intellij.openapi.util.text.StringUtil;
+
+import java.util.List;
 
 /**
  *

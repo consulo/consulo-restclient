@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 must-be.org
+ * Copyright 2013-2023 must-be.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,37 +17,19 @@
 package consulo.restclient.actions;
 
 import consulo.annotation.component.ActionImpl;
-import consulo.platform.base.icon.PlatformIconGroup;
-import consulo.ui.annotation.RequiredUIAccess;
-import consulo.ui.ex.action.AnAction;
-import consulo.ui.ex.action.AnActionEvent;
-import consulo.ui.image.Image;
-
-import javax.annotation.Nullable;
+import consulo.annotation.component.ActionRef;
+import consulo.ui.ex.action.DefaultActionGroup;
 
 /**
  * @author VISTALL
- * @since 20.11.13.
+ * @since 13/01/2023
  */
-@ActionImpl(id = "RESTClientToolbarActions.Export")
-public class ExportRequestAction extends AnAction
+@ActionImpl(id = "RESTClientToolbarActions", children = {
+		@ActionRef(type = HistoryAction.class),
+		@ActionRef(type = SaveAction.class),
+		@ActionRef(type = ExportRequestAction.class),
+		@ActionRef(type = ImportRequestAction.class),
+})
+public class RESTClientToolbarActionGroup extends DefaultActionGroup
 {
-	public ExportRequestAction()
-	{
-		super("Export");
-	}
-
-	@Nullable
-	@Override
-	protected Image getTemplateIcon()
-	{
-		return PlatformIconGroup.actionsExport();
-	}
-
-	@RequiredUIAccess
-	@Override
-	public void actionPerformed(AnActionEvent e)
-	{
-
-	}
 }

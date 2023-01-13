@@ -1,11 +1,11 @@
 package org.wiztools.restclient.util;
 
-import java.util.List;
-
+import consulo.util.lang.StringUtil;
 import org.jdom.Element;
 import org.wiztools.restclient.XMLException;
 import org.wiztools.restclient.bean.*;
-import com.intellij.openapi.util.text.StringUtil;
+
+import java.util.List;
 
 /**
  *

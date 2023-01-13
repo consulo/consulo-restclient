@@ -1,16 +1,16 @@
 package org.wiztools.restclient.util;
 
+import consulo.util.lang.StringUtil;
+import org.jdom.Element;
+import org.wiztools.restclient.XMLException;
+import org.wiztools.restclient.bean.*;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.jdom.Element;
-import org.wiztools.restclient.XMLException;
-import org.wiztools.restclient.bean.*;
-import com.intellij.openapi.util.text.StringUtil;
 
 /**
  *

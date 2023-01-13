@@ -1,13 +1,14 @@
 package org.wiztools.restclient.util;
 
-import java.nio.charset.Charset;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import consulo.util.collection.MultiMap;
+import consulo.util.lang.StringUtil;
 import org.wiztools.restclient.bean.ContentType;
 import org.wiztools.restclient.bean.ContentTypeBean;
-import com.google.common.base.Charsets;
-import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.containers.MultiMap;
+
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -15,8 +16,8 @@ import com.intellij.util.containers.MultiMap;
  */
 public final class HttpUtil {
     
-    public static final ContentType DEFAULT_CONTENT_TYPE = new ContentTypeBean("text/plain", Charsets.UTF_8);
-    public static final Charset DEFAULT_CHARSET = Charsets.UTF_8;
+    public static final ContentType DEFAULT_CONTENT_TYPE = new ContentTypeBean("text/plain", StandardCharsets.UTF_8);
+    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     
     public static ContentType getContentType(String header) {
         if(header.contains("charset")) {

@@ -1,12 +1,12 @@
 package org.wiztools.restclient.bean;
 
+import consulo.util.collection.MultiMap;
+
 import java.net.HttpCookie;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import com.intellij.util.containers.MultiMap;
 
 /**
  *
