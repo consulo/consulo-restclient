@@ -47,14 +47,7 @@ public class HistoryAction extends AnAction
 {
 	public HistoryAction()
 	{
-		super("History");
-	}
-
-	@Nullable
-	@Override
-	protected Image getTemplateIcon()
-	{
-		return PlatformIconGroup.vcsHistory();
+		super("History", null, PlatformIconGroup.vcsHistory());
 	}
 
 	@RequiredUIAccess

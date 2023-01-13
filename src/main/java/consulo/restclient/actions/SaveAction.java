@@ -21,13 +21,11 @@ import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.project.Project;
 import consulo.restclient.RestClientHistoryManager;
 import consulo.restclient.ui.RestClientPanel;
+import consulo.ui.annotation.RequiredUIAccess;
 import consulo.ui.ex.action.AnAction;
 import consulo.ui.ex.action.AnActionEvent;
 import consulo.ui.ex.awt.Messages;
-import consulo.ui.image.Image;
 import org.wiztools.restclient.bean.RequestBean;
-
-import javax.annotation.Nullable;
 
 /**
  * @author VISTALL
@@ -38,16 +36,10 @@ public class SaveAction extends AnAction
 {
 	public SaveAction()
 	{
-		super("Save");
+		super("Save", null, PlatformIconGroup.actionsMenu_saveall());
 	}
 
-	@Nullable
-	@Override
-	protected Image getTemplateIcon()
-	{
-		return PlatformIconGroup.actionsMenu_saveall();
-	}
-
+	@RequiredUIAccess
 	@Override
 	public void actionPerformed(AnActionEvent e)
 	{

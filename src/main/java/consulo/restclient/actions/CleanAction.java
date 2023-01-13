@@ -37,14 +37,7 @@ public class CleanAction extends AnAction
 {
 	public CleanAction()
 	{
-		super("Clean");
-	}
-
-	@Nullable
-	@Override
-	protected Image getTemplateIcon()
-	{
-		return PlatformIconGroup.actionsGc();
+		super("Clean", null, PlatformIconGroup.actionsGc());
 	}
 
 	@Override

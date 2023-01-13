@@ -21,10 +21,8 @@ import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.ui.annotation.RequiredUIAccess;
 import consulo.ui.ex.action.AnAction;
 import consulo.ui.ex.action.AnActionEvent;
-import consulo.ui.image.Image;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /**
  * @author VISTALL
@@ -35,14 +33,7 @@ public class ImportRequestAction extends AnAction
 {
 	public ImportRequestAction()
 	{
-		super("Import");
-	}
-
-	@Nullable
-	@Override
-	protected Image getTemplateIcon()
-	{
-		return PlatformIconGroup.actionsImport();
+		super("Import", null, PlatformIconGroup.actionsImport());
 	}
 
 	@RequiredUIAccess

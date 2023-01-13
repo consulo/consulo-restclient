@@ -34,14 +34,7 @@ public class ExportRequestAction extends AnAction
 {
 	public ExportRequestAction()
 	{
-		super("Export");
-	}
-
-	@Nullable
-	@Override
-	protected Image getTemplateIcon()
-	{
-		return PlatformIconGroup.actionsExport();
+		super("Export", null, PlatformIconGroup.actionsExport());
 	}
 
 	@RequiredUIAccess
