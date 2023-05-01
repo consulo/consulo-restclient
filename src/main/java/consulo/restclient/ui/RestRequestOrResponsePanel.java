@@ -26,6 +26,7 @@ import consulo.restclient.HttpHeader;
 import consulo.ui.ex.awt.*;
 import consulo.ui.ex.awt.table.ListTableModel;
 import consulo.ui.ex.awt.table.TableView;
+import consulo.util.lang.StringUtil;
 import consulo.virtualFileSystem.fileType.FileType;
 
 import javax.annotation.Nonnull;
@@ -173,7 +174,7 @@ public class RestRequestOrResponsePanel extends JPanel
 	public void setText(FileType fileType, String body)
 	{
 		EditorFactory editorFactory = EditorFactory.getInstance();
-		Document document = editorFactory.createDocument(body);
+		Document document = editorFactory.createDocument(StringUtil.convertLineSeparators(body));
 
 		myEditorTextField.setNewDocumentAndFileType(fileType, document);
 	}
