@@ -72,7 +72,7 @@ public class RestClientToolWindowFactory implements ToolWindowFactory, DumbAware
 	@Override
 	public Image getIcon()
 	{
-		return PlatformIconGroup.generalWeb();
+		return PlatformIconGroup.toolwindowsWebtoolwindow();
 	}
 
 	@Nonnull
