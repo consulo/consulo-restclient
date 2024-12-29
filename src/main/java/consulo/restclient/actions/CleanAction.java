@@ -25,7 +25,7 @@ import consulo.ui.ex.action.AnActionEvent;
 import consulo.ui.image.Image;
 import org.wiztools.restclient.bean.RequestBean;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import javax.swing.*;
 
 /**

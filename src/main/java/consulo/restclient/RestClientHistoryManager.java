@@ -30,8 +30,8 @@ import org.jdom.Element;
 import org.wiztools.restclient.bean.RequestBean;
 import org.wiztools.restclient.util.XmlRequestUtil;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import java.net.MalformedURLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
